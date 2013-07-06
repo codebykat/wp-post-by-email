@@ -14,9 +14,9 @@ Any new messages sent to the configured email address will be posted to the blog
 
 == Installation ==
 
-1. Unzip `post-by-email.zip` to the `/wp-content/plugins/` directory
-1. Activate the plugin through the 'Plugins' menu in WordPress
-1. Configure mailbox information under plugin settings
+1. See [Installing Plugins](http://codex.wordpress.org/Managing_Plugins#Installing_Plugins).
+1. Activate the plugin through the 'Plugins' menu.
+1. Configure mailbox information under plugin settings.
 
 == Changelog ==
 

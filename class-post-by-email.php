@@ -206,6 +206,10 @@ class Post_By_Email {
 		$options = get_option( 'post_by_email_options' );
 		/* TODO validate that options are set */
 
+		$log = array();
+		$log['last_checked'] = current_time( 'mysql' );
+		$log['messages'] = array();
+
 		$time_difference = get_option( 'gmt_offset' ) * HOUR_IN_SECONDS;
 
 		$phone_delim = '::';
@@ -213,16 +217,16 @@ class Post_By_Email {
 		$pop3 = new POP3();
 
 		if ( ! $pop3->connect( $options['mailserver_url'], $options['mailserver_port'] ) || ! $pop3->user( $options['mailserver_login'] ) )
-			wp_die( esc_html( $pop3->ERROR ) );
+			self::save_log_and_die( __( 'An error occurred: ') . esc_html( $pop3->ERROR ), $log );
 
 		$count = $pop3->pass( $options['mailserver_pass'] );
 
 		if( false === $count )
-			wp_die( esc_html( $pop3->ERROR ) );
+			self::save_log_and_die( __( 'An error occurred: ') . esc_html( $pop3->ERROR ), $log );
 
 		if( 0 === $count ) {
 			$pop3->quit();
-			wp_die( __( 'There doesn&#8217;t seem to be any new mail.' ) );
+			self::save_log_and_die( __( 'There doesn&#8217;t seem to be any new mail.' ), $log );
 		}
 
 		for ( $i = 1; $i <= $count; $i++ ) {
@@ -249,6 +253,7 @@ class Post_By_Email {
 						$content_type = trim( $line );
 						$content_type = substr( $content_type, 14, strlen( $content_type ) - 14 );
 						$content_type = explode( ';', $content_type );
+						print_r($content_type);
 						if ( ! empty( $content_type[1] ) ) {
 							$charset = explode( '=', $content_type[1] );
 							$charset = ( ! empty( $charset[1] ) ) ? trim( $charset[1] ) : '';
@@ -288,7 +293,7 @@ class Post_By_Email {
 							$author = trim( $line );
 						$author = sanitize_email( $author );
 						if ( is_email( $author ) ) {
-							echo '<p>' . sprintf( __( 'Author is %s' ), $author ) . '</p>';
+							$log['messages'][] = '<p>' . sprintf( __( 'Author is %s' ), $author ) . '</p>';
 							$userdata = get_user_by( 'email', $author );
 							if ( ! empty( $userdata ) ) {
 								$post_author = $userdata->ID;
@@ -347,6 +352,10 @@ class Post_By_Email {
 					$content = explode( $delim[0], $content );
 					$content = $content[1];
 				}
+				if ( preg_match( '/Content-Transfer-Encoding: 7bit/i', $content, $delim ) ) {
+					$content = explode( $delim[0], $content );
+					$content = $content[1];
+				}
 				$content = strip_tags( $content, '<img><p><br><i><b><u><em><strong><strike><font><span><div>' );
 			}
 			$content = trim( $content );
@@ -359,9 +368,9 @@ class Post_By_Email {
 				$content = quoted_printable_decode( $content );
 			}
 
-			if ( function_exists( 'iconv' ) && ! empty( $charset ) ) {
-				$content = iconv( $charset, get_option( 'blog_charset' ), $content );
-			}
+			// if ( function_exists( 'iconv' ) && ! empty( $charset ) ) {
+			// 	$content = iconv( $charset, get_option( 'blog_charset' ), $content );
+			// }
 
 			// Captures any text in the body after $phone_delim as the body
 			$content = explode( $phone_delim, $content );
@@ -383,7 +392,7 @@ class Post_By_Email {
 
 			$post_ID = wp_insert_post( $post_data );
 			if ( is_wp_error( $post_ID ) )
-				echo "\n" . $post_ID->get_error_message();
+				$log['messages'][] = "\n" . $post_ID->get_error_message();
 
 			// We couldn't post, for whatever reason. Better move forward to the next email.
 			if ( empty( $post_ID ) )
@@ -391,19 +400,28 @@ class Post_By_Email {
 
 			do_action( 'publish_phone', $post_ID );
 
-			echo "\n<p>" . sprintf( __( '<strong>Author:</strong> %s' ), esc_html( $post_author ) ) . '</p>';
-			echo "\n<p>" . sprintf( __( '<strong>Posted title:</strong> %s' ), esc_html( $post_title ) ) . '</p>';
+			$log['messages'][] = "\n<p>" . sprintf( __( '<strong>Author:</strong> %s' ), esc_html( $post_author ) ) . '</p>';
+			$log['messages'][] = "\n<p>" . sprintf( __( '<strong>Posted title:</strong> %s' ), esc_html( $post_title ) ) . '</p>';
 
 			if( ! $pop3->delete( $i ) ) {
-				echo '<p>' . sprintf( __( 'Oops: %s' ), esc_html( $pop3->ERROR ) ) . '</p>';
+				$log['messages'][] = '<p>' . sprintf( __( 'Oops: %s' ), esc_html( $pop3->ERROR ) ) . '</p>';
 				$pop3->reset();
 				exit;
 			} else {
-				echo '<p>' . sprintf( __( 'Mission complete. Message <strong>%s</strong> deleted.' ), $i ) . '</p>';
+				$log['messages'][] = '<p>' . sprintf( __( 'Mission complete. Message <strong>%s</strong> deleted.' ), $i ) . '</p>';
 			}
 
 		}
-
 		$pop3->quit();
+
+		foreach( $log['messages'] as $message ) { echo $message; }
+		update_option( 'post_by_email_log', $log );
+	}
+
+	protected function save_log_and_die( $error, $log ) {
+		$messages[] = $error;
+		$log['messages'] = $messages;
+		update_option( 'post_by_email_log', $log );
+		wp_die( $status );
 	}
 }

@@ -91,4 +91,15 @@
 
 		<?php submit_button(); ?>
 	</form>
+
+	<h2>Activity Log</h2>
+	<?php $log = get_option( 'post_by_email_log' ); ?>
+	<p>Last checked: <?php echo $log ? $log['last_checked'] : "Never"; ?></p>
+	<p><a href="<?php echo site_url('wp-mail.php'); ?>">Check now</a></p>
+	<?php if( $log['messages'] ) : ?>
+		And the plugin had this to say about it:
+		<?php foreach($log['messages'] as $message) : ?>
+			<li><?php echo $message; ?></li>
+		<?php endforeach; ?>
+	<?php endif; ?>
 </div>

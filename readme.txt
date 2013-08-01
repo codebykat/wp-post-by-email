@@ -2,7 +2,7 @@
 Contributors: codebykat
 Tags: post-by-email, email
 Requires at least: 3.6
-Tested up to: 3.6
+Tested up to: 3.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,6 +19,10 @@ Any new messages sent to the configured email address will be posted to the blog
 1. Configure mailbox information under plugin settings.
 
 == Changelog ==
+
+= 0.9.5 =
+* Using Horde IMAP library instead of old SquirrelMail class (still assumes POP3 server).  This fixes a
+  bug where post content was blank, and also lays some groundwork for later SSL/IMAP support.
 
 = 0.9 =
 * Initial version (straight port from core)

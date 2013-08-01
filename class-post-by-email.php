@@ -24,7 +24,7 @@ class Post_By_Email {
 	 *
 	 * @var     string
 	 */
-	protected $version = '0.9.0';
+	protected $version = '0.9.5';
 
 	/**
 	 * Unique identifier for your plugin.
@@ -189,8 +189,8 @@ class Post_By_Email {
 	 */
 	public function check_email() {
 
-		/** Get the POP3 class with which to access the mailbox. */
-		require_once( ABSPATH . WPINC . '/class-pop3.php' );
+		/** include the Horde IMAP client class */
+		require_once( plugin_dir_path( __FILE__ ) . 'include/horde-wrapper.php' );
 
 		/** Only check at this interval for new messages. */
 		if ( ! defined( 'WP_MAIL_INTERVAL' ) )
@@ -214,124 +214,136 @@ class Post_By_Email {
 
 		$phone_delim = '::';
 
-		$pop3 = new POP3();
+		$pop3 = new Horde_Imap_Client_Socket_Pop3( array('username' => $options['mailserver_login'],
+														 'password' => $options['mailserver_pass'],
+														 'hostspec' => $options['mailserver_url'],
+														 'port' => $options['mailserver_port'] ) );
+		$pop3->_setInit('authmethod', 'USER');
 
-		if ( ! $pop3->connect( $options['mailserver_url'], $options['mailserver_port'] ) || ! $pop3->user( $options['mailserver_login'] ) )
-			self::save_log_and_die( __( 'An error occurred: ') . esc_html( $pop3->ERROR ), $log );
+		try {
+			$pop3->login();
+			$test = $pop3->search( 'INBOX' );
+			$uids = $test['match'];
+		}
+		catch( Horde_Imap_Client_Exception $e ) {
+			self::save_log_and_die( __( 'An error occurred: ') . $e->getMessage(), $log );
+		}
 
-		$count = $pop3->pass( $options['mailserver_pass'] );
-
-		if( false === $count )
-			self::save_log_and_die( __( 'An error occurred: ') . esc_html( $pop3->ERROR ), $log );
-
-		if( 0 === $count ) {
-			$pop3->quit();
+		if( 0 === sizeof( $uids ) ) {
+			$pop3->shutdown();
 			self::save_log_and_die( __( 'There doesn&#8217;t seem to be any new mail.' ), $log );
 		}
 
-		for ( $i = 1; $i <= $count; $i++ ) {
 
-			$message = $pop3->get( $i );
+		foreach( $uids as $id ) {
+			$uid = new Horde_Imap_Client_Ids($id);
 
-			$bodysignal = false;
-			$boundary = '';
-			$charset = '';
-			$content = '';
-			$content_type = '';
-			$content_transfer_encoding = '';
+			// get headers
+			$headerquery = new Horde_Imap_Client_Fetch_Query();
+			$headerquery->headerText(array());
+			$headerlist = $pop3->fetch('INBOX', $headerquery, array(
+				'ids' => $uid
+			));
+
+			$headers = $headerlist->first()->getHeaderText(0, Horde_Imap_Client_Data_Fetch::HEADER_PARSE);
+
+			/* Subject */
+			// Captures any text in the subject before $phone_delim as the subject
+			$subject = $headers->getValue('Subject');
+			$subject = explode( $phone_delim, $subject );
+			$subject = $subject[0];
+
+			/* Author */
 			$post_author = 1;
 			$author_found = false;
-			$dmonths = array( 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' );
-			foreach ( $message as $line ) {
-				// body signal
-				if ( strlen( $line ) < 3 )
-					$bodysignal = true;
-				if ( $bodysignal ) {
-					$content .= $line;
-				} else {
-					if ( preg_match( '/Content-Type: /i', $line ) ) {
-						$content_type = trim( $line );
-						$content_type = substr( $content_type, 14, strlen( $content_type ) - 14 );
-						$content_type = explode( ';', $content_type );
-						print_r($content_type);
-						if ( ! empty( $content_type[1] ) ) {
-							$charset = explode( '=', $content_type[1] );
-							$charset = ( ! empty( $charset[1] ) ) ? trim( $charset[1] ) : '';
-						}
-						$content_type = $content_type[0];
-					}
-					if ( preg_match( '/Content-Transfer-Encoding: /i', $line ) ) {
-						$content_transfer_encoding = trim( $line );
-						$content_transfer_encoding = substr( $content_transfer_encoding, 27, strlen( $content_transfer_encoding ) - 27 );
-						$content_transfer_encoding = explode( ';', $content_transfer_encoding );
-						$content_transfer_encoding = $content_transfer_encoding[0];
-					}
-					if ( ( 'multipart/alternative' == $content_type ) && ( false !== strpos( $line, 'boundary="' ) ) && ( '' == $boundary ) ) {
-						$boundary = trim( $line );
-						$boundary = explode( '"', $boundary );
-						$boundary = $boundary[1];
-					}
-					if ( preg_match( '/Subject: /i', $line ) ) {
-						$subject = trim( $line );
-						$subject = substr( $subject, 9, strlen( $subject ) - 9 );
-						// Captures any text in the subject before $phone_delim as the subject
-						if ( function_exists( 'iconv_mime_decode' ) ) {
-							$subject = iconv_mime_decode( $subject, 2, get_option( 'blog_charset' ) );
-						} else {
-							$subject = wp_iso_descrambler( $subject );
-						}
-						$subject = explode( $phone_delim, $subject );
-						$subject = $subject[0];
-					}
 
-					// Set the author using the email address (From or Reply-To, the last used)
-					// otherwise use the site admin
-					if ( ! $author_found && preg_match( '/^(From|Reply-To): /', $line ) ) {
-						if ( preg_match( '|[a-z0-9_.-]+@[a-z0-9_.-]+(?!.*<)|i', $line, $matches ) )
-							$author = $matches[0];
-						else
-							$author = trim( $line );
-						$author = sanitize_email( $author );
-						if ( is_email( $author ) ) {
-							$log['messages'][] = '<p>' . sprintf( __( 'Author is %s' ), $author ) . '</p>';
-							$userdata = get_user_by( 'email', $author );
-							if ( ! empty( $userdata ) ) {
-								$post_author = $userdata->ID;
-								$author_found = true;
-							}
-						}
-					}
+			// Set the author using the email address (From or Reply-To, the last used)
+			// otherwise use the site admin
+			$author = $headers->getValue('From');
+			$replyto = $headers->getValue('Reply-To');
 
-					if ( preg_match( '/Date: /i', $line ) ) { // of the form '20 Mar 2002 20:32:37'
-						$ddate = trim( $line );
-						$ddate = str_replace( 'Date: ', '', $ddate );
-						if ( strpos( $ddate, ',' ) ) {
-							$ddate = trim( substr( $ddate, strpos( $ddate, ',' ) + 1, strlen( $ddate ) ) );
-						}
-						$date_arr = explode(' ', $ddate);
-						$date_time = explode( ':', $date_arr[3] );
-
-						$ddate_H = $date_time[0];
-						$ddate_i = $date_time[1];
-						$ddate_s = $date_time[2];
-
-						$ddate_m = $date_arr[1];
-						$ddate_d = $date_arr[0];
-						$ddate_Y = $date_arr[2];
-						for ( $j = 0; $j < 12; $j++ ) {
-							if ( $ddate_m == $dmonths[$j] ) {
-								$ddate_m = $j+1;
-							}
-						}
-
-						$time_zn = intval( $date_arr[4] ) * 36;
-						$ddate_U = gmmktime( $ddate_H, $ddate_i, $ddate_s, $ddate_m, $ddate_d, $ddate_Y );
-						$ddate_U = $ddate_U - $time_zn;
-						$post_date = gmdate( 'Y-m-d H:i:s', $ddate_U + $time_difference );
-						$post_date_gmt = gmdate( 'Y-m-d H:i:s', $ddate_U );
+			if ( ! $author_found ) {
+				if ( preg_match( '|[a-z0-9_.-]+@[a-z0-9_.-]+(?!.*<)|i', $author, $matches ) )
+					$author = $matches[0];
+				else
+					$author = trim( $author );
+				$author = sanitize_email( $author );
+				if ( is_email( $author ) ) {
+					$log['messages'][] = '<p>' . sprintf( __( 'Author is %s' ), $author ) . '</p>';
+					$userdata = get_user_by( 'email', $author );
+					if ( ! empty( $userdata ) ) {
+						$post_author = $userdata->ID;
+						$author_found = true;
 					}
 				}
 			}
+
+
+			/* Date */
+			$date = $headers->getValue('Date');
+			$dmonths = array( 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' );
+
+			// of the form '20 Mar 2002 20:32:37'
+			$ddate = trim( $date );
+			if ( strpos( $ddate, ',' ) ) {
+				$ddate = trim( substr( $ddate, strpos( $ddate, ',' ) + 1, strlen( $ddate ) ) );
+			}
+
+			$date_arr = explode(' ', $ddate);
+			$date_time = explode( ':', $date_arr[3] );
+
+			$ddate_H = $date_time[0];
+			$ddate_i = $date_time[1];
+			$ddate_s = $date_time[2];
+
+			$ddate_m = $date_arr[1];
+			$ddate_d = $date_arr[0];
+			$ddate_Y = $date_arr[2];
+
+			for ( $j = 0; $j < 12; $j++ ) {
+				if ( $ddate_m == $dmonths[$j] ) {
+					$ddate_m = $j+1;
+				}
+			}
+
+			$time_zn = intval( $date_arr[4] ) * 36;
+			$ddate_U = gmmktime( $ddate_H, $ddate_i, $ddate_s, $ddate_m, $ddate_d, $ddate_Y );
+			$ddate_U = $ddate_U - $time_zn;
+			$post_date = gmdate( 'Y-m-d H:i:s', $ddate_U + $time_difference );
+			$post_date_gmt = gmdate( 'Y-m-d H:i:s', $ddate_U );
+
+
+
+			/* Message body */
+			$query = new Horde_Imap_Client_Fetch_Query();
+			$query->structure();
+
+			$list = $pop3->fetch('INBOX', $query, array(
+		    	'ids' => $uid
+			));
+
+			$part = $list->first()->getStructure();
+			$id = $part->findBody();
+			$body = $part->getPart($id);
+
+			$query2 = new Horde_Imap_Client_Fetch_Query();
+			$query2->bodyPart($id, array(
+			    'decode' => true,
+			    'peek' => true
+			));
+
+			$list2 = $pop3->fetch('INBOX', $query2, array(
+			    'ids' => $uid
+			));	
+
+			$message2 = $list2->first();
+			$content = $message2->getBodyPart($id);
+			if (!$message2->getBodyPartDecode($id)) {
+			    // Quick way to transfer decode contents
+			    $body->setContents($content);
+			    $content = $body->getContents();
+			}
+
 
 			// Set $post_status based on $author_found and on author's publish_posts capability
 			if ( $author_found ) {
@@ -344,33 +356,12 @@ class Post_By_Email {
 
 			$subject = trim( $subject );
 
-			if ( 'multipart/alternative' == $content_type ) {
-				$content = explode( '--'.$boundary, $content );
-				$content = $content[2];
-				// match case-insensitive content-transfer-encoding
-				if ( preg_match( '/Content-Transfer-Encoding: quoted-printable/i', $content, $delim ) ) {
-					$content = explode( $delim[0], $content );
-					$content = $content[1];
-				}
-				if ( preg_match( '/Content-Transfer-Encoding: 7bit/i', $content, $delim ) ) {
-					$content = explode( $delim[0], $content );
-					$content = $content[1];
-				}
-				$content = strip_tags( $content, '<img><p><br><i><b><u><em><strong><strike><font><span><div>' );
-			}
+			$content = strip_tags( $content, '<img><p><br><i><b><u><em><strong><strike><font><span><div>' );
 			$content = trim( $content );
 
 			//Give Post-By-Email extending plugins full access to the content
 			//Either the raw content or the content of the last quoted-printable section
 			$content = apply_filters( 'wp_mail_original_content', $content );
-
-			if ( false !== stripos( $content_transfer_encoding, "quoted-printable" ) ) {
-				$content = quoted_printable_decode( $content );
-			}
-
-			// if ( function_exists( 'iconv' ) && ! empty( $charset ) ) {
-			// 	$content = iconv( $charset, get_option( 'blog_charset' ), $content );
-			// }
 
 			// Captures any text in the body after $phone_delim as the body
 			$content = explode( $phone_delim, $content );
@@ -403,16 +394,20 @@ class Post_By_Email {
 			$log['messages'][] = "\n<p>" . sprintf( __( '<strong>Author:</strong> %s' ), esc_html( $post_author ) ) . '</p>';
 			$log['messages'][] = "\n<p>" . sprintf( __( '<strong>Posted title:</strong> %s' ), esc_html( $post_title ) ) . '</p>';
 
-			if( ! $pop3->delete( $i ) ) {
-				$log['messages'][] = '<p>' . sprintf( __( 'Oops: %s' ), esc_html( $pop3->ERROR ) ) . '</p>';
-				$pop3->reset();
-				exit;
-			} else {
-				$log['messages'][] = '<p>' . sprintf( __( 'Mission complete. Message <strong>%s</strong> deleted.' ), $i ) . '</p>';
-			}
+		} // end foreach
 
+		// delete all processed emails
+		try {
+			$pop3->store( 'INBOX', array(
+				'add' => array( Horde_Imap_Client::FLAG_DELETED ),
+				'ids' => $uids
+			) );			
 		}
-		$pop3->quit();
+		catch ( Horde_Imap_Client_Exception $e ) {
+			self::save_log_and_die( __( 'An error occurred: ') . $e->getMessage(), $log );
+		}
+
+		$pop3->shutdown();
 
 		foreach( $log['messages'] as $message ) { echo $message; }
 		update_option( 'post_by_email_log', $log );

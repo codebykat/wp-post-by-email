@@ -12,7 +12,7 @@
  * Plugin Name: Post By Email
  * Plugin URI:  http://codebykat.wordpress.com
  * Description: Gets email messages from the user's mailbox to add as WordPress posts.
- * Version:     0.9.0
+ * Version:     0.9.5
  * Author:      Kat Hagan
  * Author URI:  http://profiles.wordpress.org/codebykat
  * Text Domain: post-by-email-locale

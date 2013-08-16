@@ -143,8 +143,27 @@ class Post_By_Email {
 	}
 
 	public function post_by_email_validate($input) {
-		// TODO
-		return $input;
+		// load all the options so we don't wipe out the log
+		$options = get_option( 'post_by_email_options' );
+
+		$options['mailserver_url'] = trim( $input['mailserver_url'] );
+
+		// port must be numeric and 16 digits max
+		$options['mailserver_port'] = trim( $input['mailserver_port'] );
+		if( ! preg_match('/^[1-9][0-9]{0,15}$/', $options['mailserver_port'] ) ) {
+			$options['mailserver_port'] = '';
+		}
+
+		$options['mailserver_login'] = trim( $input['mailserver_login'] );
+		$options['mailserver_pass'] = trim( $input['mailserver_pass'] );
+
+		// default email category must be the ID of a real category
+		$options['default_email_category'] = $input['default_email_category'];
+		if( ! get_category( $options['default_email_category'] ) ) {
+			$options['default_email_category'] = '';
+		}
+
+		return $options;
 	}
 
 	/**

@@ -327,7 +327,7 @@ class Post_By_Email {
 			$query->structure();
 
 			$list = $pop3->fetch( 'INBOX', $query, array(
-		    	'ids' => $uid
+				'ids' => $uid
 			));
 
 			$part = $list->first()->getStructure();
@@ -336,20 +336,20 @@ class Post_By_Email {
 
 			$query2 = new Horde_Imap_Client_Fetch_Query();
 			$query2->bodyPart( $id, array(
-			    'decode' => true,
-			    'peek' => true
+				'decode' => true,
+				'peek' => true
 			));
 
 			$list2 = $pop3->fetch( 'INBOX', $query2, array(
-			    'ids' => $uid
-			));	
+				'ids' => $uid
+			));
 
 			$message2 = $list2->first();
 			$content = $message2->getBodyPart( $id );
 			if ( ! $message2->getBodyPartDecode( $id ) ) {
-			    // Quick way to transfer decode contents
-			    $body->setContents( $content );
-			    $content = $body->getContents();
+				// Quick way to transfer decode contents
+				$body->setContents( $content );
+				$content = $body->getContents();
 			}
 
 
@@ -409,7 +409,7 @@ class Post_By_Email {
 			$pop3->store( 'INBOX', array(
 				'add' => array( Horde_Imap_Client::FLAG_DELETED ),
 				'ids' => $uids
-			) );			
+			) );
 		}
 		catch ( Horde_Imap_Client_Exception $e ) {
 			self::save_log_and_die( __( 'An error occurred: ', 'post-by-email') . $e->getMessage(), $log );

@@ -25,7 +25,7 @@ require_once('Horde/Stub.php');
 
 require_once('Horde/String.php');
 
-require_once('Horde-Translation-Wrapper.php');
+require_once('class-horde-imap-client-translation.php');
 
 require_once('Horde/Client.php');
 

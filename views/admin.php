@@ -22,11 +22,12 @@
 			printf( __( 'To post to WordPress by e-mail you must set up a secret e-mail account
 						 with POP3 access. Any mail received at this address will be posted, so
 						 it&#8217;s a good idea to keep this address very secret. Here are three
-						 random strings you could use: <kbd>%s</kbd>, <kbd>%s</kbd>, <kbd>%s</kbd>.' ),
-	                 wp_generate_password( 8, false ),
-	                 wp_generate_password( 8, false ),
-	                 wp_generate_password( 8, false ) )
-	    ?>
+						 random strings you could use: <kbd>%s</kbd>, <kbd>%s</kbd>, <kbd>%s</kbd>.',
+						 'post-by-email' ),
+					wp_generate_password( 8, false ),
+					wp_generate_password( 8, false ),
+					wp_generate_password( 8, false ) )
+		?>
 	</p>
 
 	<form method="post" action="options.php">
@@ -38,51 +39,51 @@
 			<tr valign="top">
 				<th scope="row">
 					<label for="post_by_email_options[mailserver_url]">
-						<?php _e( 'Mail Server' ) ?>
+						<?php _e( 'Mail Server', 'post-by-email' ) ?>
 					</label>
 				</th>
 				<td>
-					<input name="post_by_email_options[mailserver_url]" type="text" id="mailserver_url" value="<?php echo esc_attr( $options[mailserver_url] ); ?>" class="regular-text ltr" />
+					<input name="post_by_email_options[mailserver_url]" type="text" id="mailserver_url" value="<?php echo esc_attr( $options['mailserver_url'] ); ?>" class="regular-text ltr" />
 					<label for="post_by_email_options[mailserver_port]">
-						<?php _e( 'Port' ) ?>
+						<?php _e( 'Port', 'post-by-email' ) ?>
 					</label>
-					<input name="post_by_email_options[mailserver_port]" type="text" id="mailserver_port" value="<?php echo esc_attr( $options[mailserver_port] ); ?>" class="small-text" />
+					<input name="post_by_email_options[mailserver_port]" type="text" id="mailserver_port" value="<?php echo esc_attr( $options['mailserver_port'] ); ?>" class="small-text" />
 				</td>
 			</tr>
 			<tr valign="top">
 				<th scope="row">
 					<label for="post_by_email_options[mailserver_login]">
-						<?php _e( 'Login Name' ) ?>
+						<?php _e( 'Login Name', 'post-by-email' ) ?>
 					</label>
 				</th>
 				<td>
-					<input name="post_by_email_options[mailserver_login]" type="text" id="mailserver_login" value="<?php echo esc_attr( $options[mailserver_login] ); ?>" class="regular-text ltr" />
+					<input name="post_by_email_options[mailserver_login]" type="text" id="mailserver_login" value="<?php echo esc_attr( $options['mailserver_login'] ); ?>" class="regular-text ltr" />
 				</td>
 			</tr>
 			<tr valign="top">
 				<th scope="row">
 					<label for="post_by_email_options[mailserver_pass]">
-						<?php _e( 'Password' ) ?>
+						<?php _e( 'Password', 'post-by-email' ) ?>
 					</label>
 				</th>
 				<td>
-					<input name="post_by_email_options[mailserver_pass]" type="password" id="mailserver_pass" value="<?php echo esc_attr( $options[mailserver_pass] ); ?>" class="regular-text ltr" />
+					<input name="post_by_email_options[mailserver_pass]" type="password" id="mailserver_pass" value="<?php echo esc_attr( $options['mailserver_pass'] ); ?>" class="regular-text ltr" />
 				</td>
 			</tr>
 			<tr valign="top">
 				<th scope="row">
 					<label for="post_by_email_options[default_email_category]">
-						<?php _e( 'Default Mail Category' ) ?>
+						<?php _e( 'Default Mail Category', 'post-by-email' ) ?>
 					</label>
 				</th>
 				<td>
 					<?php
-						wp_dropdown_categories( array( 'hide_empty' => 0,
-													   'name' => 'default_email_category',
-													   'orderby' => 'name',
-													   'selected' => $options['default_email_category'],
-													   'hierarchical' => true
-											         ) );
+						wp_dropdown_categories( array(	'hide_empty' => 0,
+														'name' => 'post_by_email_options[default_email_category]',
+														'orderby' => 'name',
+														'selected' => $options['default_email_category'],
+														'hierarchical' => true
+													) );
 					?>
 				</td>
 			</tr>
@@ -92,14 +93,20 @@
 		<?php submit_button(); ?>
 	</form>
 
-	<h2>Activity Log</h2>
-	<?php $log = get_option( 'post_by_email_log' ); ?>
-	<p>Last checked: <?php echo $log ? $log['last_checked'] : "Never"; ?></p>
-	<p><a href="<?php echo site_url('wp-mail.php'); ?>">Check now</a></p>
+	<h2><?php _e( 'Activity Log', 'post-by-email' ) ?></h2>
+	<?php
+		$options = get_option( 'post_by_email_options' );
+		$log = $options['log'];
+	?>
+	<p>
+		<?php _e( 'Last checked:', 'post-by-email' ) ?>
+		<?php echo $log ? $log['last_checked'] : __( 'Never', 'post-by-email' ); ?>
+	</p>
 	<?php if( $log['messages'] ) : ?>
-		And the plugin had this to say about it:
+		<?php _e( 'And the plugin had this to say about it:', 'post-by-email' ); ?>
 		<?php foreach($log['messages'] as $message) : ?>
 			<li><?php echo $message; ?></li>
 		<?php endforeach; ?>
 	<?php endif; ?>
+	<p><a href="<?php echo site_url('wp-mail.php'); ?>"><?php _e( 'Check now', 'post-by-email' ) ?></a></p>
 </div>

@@ -15,7 +15,7 @@
  * Version:     0.9.5
  * Author:      Kat Hagan
  * Author URI:  http://profiles.wordpress.org/codebykat
- * Text Domain: post-by-email-locale
+ * Text Domain: post-by-email
  * License:     GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  * Domain Path: /lang
@@ -37,15 +37,8 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-// If this file is called directly, abort.
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
-
 require_once( plugin_dir_path( __FILE__ ) . 'class-post-by-email.php' );
 
-// Register hooks that are fired when the plugin is activated and deactivated.
 register_activation_hook( __FILE__, array( 'Post_By_Email', 'activate' ) );
-register_deactivation_hook( __FILE__, array( 'Post_By_Email', 'deactivate' ) );
 
 Post_By_Email::get_instance();

@@ -24,7 +24,7 @@ class Post_By_Email {
 	 *
 	 * @var     string
 	 */
-	protected $version = '0.9.5';
+	protected $version = '0.9.6';
 
 	/**
 	 * Unique identifier for your plugin.
@@ -56,16 +56,8 @@ class Post_By_Email {
 		// Load plugin text domain
 		add_action( 'plugins_loaded', array( $this, 'load_plugin_textdomain' ) );
 
-		// Add the options page and menu item.
-		add_action( 'admin_init', array( $this, 'add_plugin_settings' ) );
-		add_action( 'admin_menu', array( $this, 'add_plugin_admin_menu' ) );
-
 		// add hook to check for mail
 		add_action( 'wp-mail.php', array( 'Post_By_Email', 'check_email' ) );
-
-		// disable post by email settings on Settings->Writing page
-		// NOTE: this requires the check be removed from wp-mail.php
-		add_filter( 'enable_post_by_email_configuration', '__return_false' );
 	}
 
 	/**
@@ -133,62 +125,6 @@ class Post_By_Email {
 		load_plugin_textdomain( $domain, FALSE, dirname( plugin_basename( __FILE__ ) ) . '/lang/' );
 	}
 
-	/**
-	 * Register the settings.
-	 *
-	 * @since    0.9.0
-	 */
-	public function add_plugin_settings() {
-		register_setting( 'post_by_email_options', 'post_by_email_options', array( $this, 'post_by_email_validate' ) );
-	}
-
-	public function post_by_email_validate($input) {
-		// load all the options so we don't wipe out the log
-		$options = get_option( 'post_by_email_options' );
-
-		$options['mailserver_url'] = trim( $input['mailserver_url'] );
-
-		// port must be numeric and 16 digits max
-		$options['mailserver_port'] = trim( $input['mailserver_port'] );
-		if( ! preg_match('/^[1-9][0-9]{0,15}$/', $options['mailserver_port'] ) ) {
-			$options['mailserver_port'] = '';
-		}
-
-		$options['mailserver_login'] = trim( $input['mailserver_login'] );
-		$options['mailserver_pass'] = trim( $input['mailserver_pass'] );
-
-		// default email category must be the ID of a real category
-		$options['default_email_category'] = $input['default_email_category'];
-		if( ! get_category( $options['default_email_category'] ) ) {
-			$options['default_email_category'] = '';
-		}
-
-		return $options;
-	}
-
-	/**
-	 * Register the administration menu for this plugin into the WordPress Dashboard menu.
-	 *
-	 * @since    0.9.0
-	 */
-	public function add_plugin_admin_menu() {
-		$this->plugin_screen_hook_suffix = add_management_page(
-			__( 'Post By Email', 'post-by-email' ),
-			__( 'Post By Email', 'post-by-email' ),
-			'read',
-			$this->plugin_slug,
-			array( $this, 'display_plugin_admin_page' )
-		);
-	}
-
-	/**
-	 * Render the settings page for this plugin.
-	 *
-	 * @since    0.9.0
-	 */
-	public function display_plugin_admin_page() {
-		include_once( plugin_dir_path( __FILE__ ) . 'views/admin.php' );
-	}
 
 	/**
 	 * Check for new messages and post them to the blog.

@@ -829,7 +829,8 @@ abstract class Horde_Imap_Client_Base implements Serializable
             throw new Horde_Imap_Client_Exception_NoSupportExtension('ID');
         }
 
-        $this->_sendID(is_null($info) ? ($this->getParam('id') ?: array()) : $info);
+        /* Modified for WordPress inclusion: The shorthand ternary operator ?: was introduced in PHP 5.3. */
+        $this->_sendID(is_null($info) ? ($this->getParam('id') ? $this->getParam('id') : array()) : $info);
     }
 
     /**

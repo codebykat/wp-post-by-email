@@ -41,6 +41,13 @@ class Horde_Exception_Wrapped extends Horde_Exception
             $message = (string)$message->getMessage();
         }
 
-        parent::__construct($message, $code, $previous);
+        /* Modified for WordPress inclusion:
+            The "previous" argument was added in PHP 5.3. */
+        if( version_compare( PHP_VERSION, '5.3' ) < 0 ) {
+            parent::__construct($message, $code);
+        }
+        else {
+            parent::__construct($message, $code, $previous);
+        }
     }
 }

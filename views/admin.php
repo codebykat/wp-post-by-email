@@ -96,7 +96,10 @@
 	<h2><?php _e( 'Activity Log', 'post-by-email' ) ?></h2>
 	<?php
 		$options = get_option( 'post_by_email_options' );
-		$log = $options['log'];
+		$log = null;
+		if( array_key_exists( 'log', $options) ) {
+			$log = $options['log'];
+		}
 	?>
 	<p>
 		<?php _e( 'Last checked:', 'post-by-email' ) ?>

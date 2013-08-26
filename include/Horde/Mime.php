@@ -293,12 +293,12 @@ class Horde_Mime
             switch ($encoding) {
             case 'Q':
             case 'q':
+                /* Modified for WordPress inclusion:
+                    passing anonymous functions does not work in PHP 5.2. */
                 $out .= Horde_String::convertCharset(
                     preg_replace_callback(
                         '/=([0-9a-f]{2})/i',
-                        function($ord) {
-                            return chr(hexdec($ord[1]));
-                        },
+                        preg_replace_callback_fn,
                         str_replace('_', ' ', $encoded_text)),
                     $orig_charset,
                     'UTF-8'
@@ -708,4 +708,7 @@ class Horde_Mime
         return rtrim($decoded, "\0");
     }
 
+    protected function preg_replace_callback_fn($ord) {
+        return chr(hexdec($ord[1]));
+    }
 }

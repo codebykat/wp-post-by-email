@@ -298,7 +298,7 @@ class Horde_Mime
                 $out .= Horde_String::convertCharset(
                     preg_replace_callback(
                         '/=([0-9a-f]{2})/i',
-                        preg_replace_callback_fn,
+                        'preg_replace_callback_fn',
                         str_replace('_', ' ', $encoded_text)),
                     $orig_charset,
                     'UTF-8'

@@ -14,6 +14,9 @@ Any new messages sent to the configured email address will be posted to the blog
 
 == Installation ==
 
+Warning: This plugin is currently a very early beta!  Use at your own risk and please report any bugs.
+
+1. Apply the patch found in the plugin directory to WordPress Core.  See [Applying .patch or .diff files](https://codex.wordpress.org/Using_Subversion#Applying_.patch_or_.diff_files).
 1. See [Installing Plugins](http://codex.wordpress.org/Managing_Plugins#Installing_Plugins).
 1. Activate the plugin through the 'Plugins' menu.
 1. Configure mailbox information under plugin settings.

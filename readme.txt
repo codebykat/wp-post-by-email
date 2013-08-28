@@ -6,15 +6,23 @@ Tested up to: 3.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Gets the email message from the user's mailbox to add as a WordPress post.
+Create new posts on your WordPress blog by sending email to a specific email address.
 
 == Description ==
 
+**Warning:** This plugin is currently a very early beta!  Use at your own risk and please report any bugs, either on the [WordPress Support forums](http://wordpress.org/support/plugin/post-by-email) or via the [Github issues page](https://github.com/codebykat/wp-post-by-email/issues).
+
 Any new messages sent to the configured email address will be posted to the blog.  This plugin replaces the functionality that used to live in core.
 
-== Installation ==
+The "From" address is matched to WordPress users in the database to determine the post's author.  If the author is a non-admin or doesn't have an account, the post status will be set to "pending".
 
-Warning: This plugin is currently a very early beta!  Use at your own risk and please report any bugs.
+Once an email has been successfully posted to the blog, it will be deleted from the mailbox.
+
+This plugin currently supports only unsecured (i.e., non-SSL) POP3 mail accounts, which means it *will not work* with most common webmail hosts such as Gmail.
+
+Updates on the project can be found on the [Make WordPress Core blog](http://make.wordpress.org/core/tag/post-by-email/).
+
+== Installation ==
 
 1. Apply the patch found in the plugin directory to WordPress Core.  See [Applying .patch or .diff files](https://codex.wordpress.org/Using_Subversion#Applying_.patch_or_.diff_files).
 1. See [Installing Plugins](http://codex.wordpress.org/Managing_Plugins#Installing_Plugins).

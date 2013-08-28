@@ -20,13 +20,15 @@ Any new messages sent to the configured email address will be posted to the blog
 
 == Changelog ==
 
+= 0.9.7 =
+* Refactored Horde includes to autoload class files as needed.
+
 = 0.9.6 =
 * Added workarounds to support PHP 5.2.
 * Moved admin functions into a separate class.
 
 = 0.9.5 =
-* Using Horde IMAP library instead of old SquirrelMail class (still assumes POP3 server).  This fixes a
-  bug where post content was blank, and also lays some groundwork for later SSL/IMAP support.
+* Using Horde IMAP library instead of old SquirrelMail class (still assumes POP3 server).  This fixes a bug where post content was blank, and also lays some groundwork for later SSL/IMAP support.
 
 = 0.9 =
 * Initial version (straight port from core)

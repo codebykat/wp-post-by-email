@@ -24,7 +24,7 @@ class Post_By_Email {
 	 *
 	 * @var     string
 	 */
-	protected $version = '0.9.6';
+	protected $version = '0.9.7';
 
 	/**
 	 * Unique identifier for your plugin.
@@ -48,6 +48,15 @@ class Post_By_Email {
 	protected static $instance = null;
 
 	/**
+	 * Plugin include path (used for autoloading libraries).
+	 *
+	 * @since    0.9.7
+	 *
+	 * @var      object
+	 */
+	public static $path;
+
+	/**
 	 * Initialize the plugin by setting localization, filters, and administration functions.
 	 *
 	 * @since     0.9.0
@@ -55,6 +64,9 @@ class Post_By_Email {
 	private function __construct() {
 		// Load plugin text domain
 		add_action( 'plugins_loaded', array( $this, 'load_plugin_textdomain' ) );
+
+		// Enable autoloading
+		add_action( 'plugins_loaded', array( $this, 'load' ) );
 
 		// add hook to check for mail
 		add_action( 'wp-mail.php', array( 'Post_By_Email', 'check_email' ) );
@@ -134,7 +146,7 @@ class Post_By_Email {
 	public function check_email() {
 
 		/** include the Horde IMAP client class */
-		require_once( plugin_dir_path( __FILE__ ) . 'include/horde-wrapper.php' );
+		// require_once( plugin_dir_path( __FILE__ ) . 'include/horde-wrapper.php' );
 
 		/** Only check at this interval for new messages. */
 		if ( ! defined( 'WP_MAIL_INTERVAL' ) )
@@ -142,7 +154,7 @@ class Post_By_Email {
 
 		$last_checked = get_transient( 'mailserver_last_checked' );
 
-		if ( $last_checked )
+		if ( $last_checked && ! WP_DEBUG )
 			wp_die( __( 'Slow down cowboy, no need to check for new mails so often!', 'post-by-email' ) );
 
 		set_transient( 'mailserver_last_checked', true, WP_MAIL_INTERVAL );
@@ -358,6 +370,14 @@ class Post_By_Email {
 		update_option( 'post_by_email_options', $options );
 	}
 
+	/**
+	 * Save a message to the log file and wp_die()
+	 *
+	 * @since    0.9.0
+	 *
+	 * @param    string    $error    Error message to save to the log.
+	 * @param    array     $log      The log file to save back to the plugin options.
+	 */
 	protected function save_log_and_die( $error, $log ) {
 		$log['messages'][] = $error;
 
@@ -366,5 +386,37 @@ class Post_By_Email {
 		update_option( 'post_by_email_options', $options );
 
 		wp_die( $error );
+	}
+
+	/**
+	 * Set the plugin include path and register the autoloader.
+	 *
+	 * @since 0.9.7
+	 */
+	public static function load() {
+		self::$path = __DIR__;
+		spl_autoload_register( array( get_called_class(), 'autoload' ) );
+	}
+
+	/**
+	 * Autoload class libraries as needed.
+	 *
+	 * @since 0.9.7
+	 *
+	 * @param    string    $class    Class name of requested object.
+	 */
+	public static function autoload( $class ) {
+		// We're only interested in autoloading Horde includes.
+		if( 0 !== strpos( $class, 'Horde' ) ) {
+			return;
+		}
+
+		// Replace all underscores in the class name with slashes.
+		// ex: we expect the class Horde_Imap_Client to be defined in Horde/Imap/Client.php.
+		$filename = str_replace( array( '_', '\\' ), '/', $class );
+		$filename = self::$path . '/include/' . $filename . '.php';
+		if( file_exists( $filename ) ) {
+			require_once( $filename );
+		}
 	}
 }

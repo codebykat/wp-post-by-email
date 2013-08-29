@@ -29,7 +29,20 @@ Updates on the project can be found on the [Make WordPress Core blog](http://mak
 1. Activate the plugin through the 'Plugins' menu.
 1. Configure mailbox information under plugin settings.
 
+
+== Tests ==
+
+Like WordPress Core, this plugin includes unit tests written in PHPUnit.
+
+To run the tests:
+
+1. Set up the WordPress testing library as described in [Handbook: Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).
+1. From the plugin directory, run `WP_TESTS_DIR=/path/to/WordPress/test/install phpunit`
+
 == Changelog ==
+
+= 0.9.8 =
+* Use wp_cron to schedule hourly mail checks.
 
 = 0.9.7 =
 * Refactored Horde includes to autoload class files as needed.

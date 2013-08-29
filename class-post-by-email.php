@@ -52,9 +52,24 @@ class Post_By_Email {
 	 *
 	 * @since    0.9.7
 	 *
-	 * @var      object
+	 * @var      string
 	 */
 	public static $path;
+
+	/**
+	 * Default settings.
+	 *
+	 * @since    0.9.8
+	 *
+	 * @var      array
+	 */
+	protected $default_options = array(
+		'mailserver_url' => 'mail.example.com',
+		'mailserver_login' => 'login@example.com',
+		'mailserver_pass' => 'password',
+		'mailserver_port' => 110,
+		'default_email_category' => '');
+
 
 	/**
 	 * Initialize the plugin by setting localization, filters, and administration functions.
@@ -68,8 +83,9 @@ class Post_By_Email {
 		// Enable autoloading
 		add_action( 'plugins_loaded', array( $this, 'load' ) );
 
-		// add hook to check for mail
-		add_action( 'wp-mail.php', array( 'Post_By_Email', 'check_email' ) );
+		// add hooks to check for mail
+		add_action( 'wp-mail.php', array( $this, 'check_email' ) );
+		add_action( 'post-by-email-wp-mail.php', array( $this, 'check_email' ) );
 	}
 
 	/**
@@ -101,26 +117,32 @@ class Post_By_Email {
 		$options = get_option( 'post_by_email_options' );
 
 		if( ! $options ) {
-			$options = array();
+			$options = $this->default_options;
 
 			// if old global options exist, copy them into plugin options
-			// WP_MAIL_INTERVAL - interval to check new messages
-
-			$plugin_options = array(
-				'mailserver_url',
-				'mailserver_port',
-				'mailserver_login',
-				'mailserver_pass',
-				'default_email_category'
-			);
-
-			foreach( $plugin_options as $optname ) {
-				$options[ $optname ] = get_option( $optname );
-				//delete_option( $optname );			
+			foreach( array_keys( $this->default_options ) as $optname ) {
+				if( get_option( $optname ) ) {
+					$options[ $optname ] = get_option( $optname );
+					//delete_option( $optname );			
+				}
 			}
 
 			update_option( 'post_by_email_options', $options );
 		}
+
+		// schedule hourly mail checks with wp_cron
+		if( ! wp_next_scheduled( 'post-by-email-wp-mail.php' ) ) {
+			wp_schedule_event( current_time( 'timestamp', 1 ), 'hourly', 'post-by-email-wp-mail.php' );
+		}
+	}
+
+	/**
+	* Fired when the plugin is deactivated.
+	*
+	* @since    0.9.8
+	*/
+	function deactivate() {
+		wp_clear_scheduled_hook( 'post-by-email-wp-mail.php' );
 	}
 
 	/**
@@ -129,7 +151,6 @@ class Post_By_Email {
 	 * @since    0.9.0
 	 */
 	public function load_plugin_textdomain() {
-
 		$domain = $this->plugin_slug;
 		$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
 
@@ -137,18 +158,13 @@ class Post_By_Email {
 		load_plugin_textdomain( $domain, FALSE, dirname( plugin_basename( __FILE__ ) ) . '/lang/' );
 	}
 
-
 	/**
 	 * Check for new messages and post them to the blog.
 	 *
 	 * @since    0.9.0
 	 */
 	public function check_email() {
-
-		/** include the Horde IMAP client class */
-		// require_once( plugin_dir_path( __FILE__ ) . 'include/horde-wrapper.php' );
-
-		/** Only check at this interval for new messages. */
+		// Only check at this interval for new messages.
 		if ( ! defined( 'WP_MAIL_INTERVAL' ) )
 			define( 'WP_MAIL_INTERVAL', 5 * MINUTE_IN_SECONDS );
 
@@ -160,10 +176,17 @@ class Post_By_Email {
 		set_transient( 'mailserver_last_checked', true, WP_MAIL_INTERVAL );
 
 		$options = get_option( 'post_by_email_options' );
-		/* TODO validate that options are set */
+
+		// if options aren't set, there's nothing to do, move along
+		foreach( array( 'mailserver_url', 'mailserver_login', 'mailserver_pass' ) as $optname ) {
+			if( ! $options[$optname] || $options[$optname] == $this->default_options[$optname] ) {
+				// TODO logging
+				return;
+			}
+		}
 
 		$log = array();
-		$log['last_checked'] = current_time( 'mysql' );
+		$log['last_checked'] = current_time( 'timestamp' );
 		$log['messages'] = array();
 
 		$time_difference = get_option( 'gmt_offset' ) * HOUR_IN_SECONDS;

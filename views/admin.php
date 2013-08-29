@@ -102,14 +102,28 @@
 		}
 	?>
 	<p>
-		<?php _e( 'Last checked:', 'post-by-email' ) ?>
-		<?php echo $log ? $log['last_checked'] : __( 'Never', 'post-by-email' ); ?>
+		<?php _e( 'Last checked for new mail:', 'post-by-email' ) ?>
+		<?php
+			$date_format = get_option( 'date_format' );
+			$time_format = get_option( 'time_format' );
+		?>
+		<?php if($log) : ?>
+			<?php echo date_i18n( "$date_format, $time_format", $log['last_checked'] ); ?>
+		<?php else: ?>
+			<?php _e( 'Never', 'post-by-email' ); ?>
+		<?php endif; ?>
+		<br />
+		<?php _e( 'Next scheduled check:', 'post-by-email' ) ?>
+		<?php
+			$next = wp_next_scheduled( 'post-by-email-wp-mail.php' );
+			echo get_date_from_gmt( date( 'Y-m-d H:i:s', $next ) , "$date_format, $time_format");
+		?>
 	</p>
+	<p><a href="<?php echo site_url('wp-mail.php'); ?>"><?php _e( 'Check now', 'post-by-email' ) ?></a></p>
 	<?php if( $log['messages'] ) : ?>
-		<?php _e( 'And the plugin had this to say about it:', 'post-by-email' ); ?>
+		<h3><?php _e( 'Log Messages', 'post-by-email' ); ?></h3>
 		<?php foreach($log['messages'] as $message) : ?>
 			<li><?php echo $message; ?></li>
 		<?php endforeach; ?>
 	<?php endif; ?>
-	<p><a href="<?php echo site_url('wp-mail.php'); ?>"><?php _e( 'Check now', 'post-by-email' ) ?></a></p>
 </div>

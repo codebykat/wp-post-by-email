@@ -93,13 +93,9 @@
 		<?php submit_button(); ?>
 	</form>
 
-	<h2><?php _e( 'Activity Log', 'post-by-email' ) ?></h2>
+	<h3><?php _e( 'Activity Log', 'post-by-email' ) ?></h3>
 	<?php
 		$options = get_option( 'post_by_email_options' );
-		$log = null;
-		if( array_key_exists( 'log', $options) ) {
-			$log = $options['log'];
-		}
 	?>
 	<p>
 		<?php _e( 'Last checked for new mail:', 'post-by-email' ) ?>
@@ -107,8 +103,8 @@
 			$date_format = get_option( 'date_format' );
 			$time_format = get_option( 'time_format' );
 		?>
-		<?php if($log) : ?>
-			<?php echo date_i18n( "$date_format, $time_format", $log['last_checked'] ); ?>
+		<?php if( isset( $options['last_checked'] ) ) : ?>
+			<?php echo date_i18n( "$date_format, $time_format", $options['last_checked'] ); ?>
 		<?php else: ?>
 			<?php _e( 'Never', 'post-by-email' ); ?>
 		<?php endif; ?>
@@ -116,14 +112,53 @@
 		<?php _e( 'Next scheduled check:', 'post-by-email' ) ?>
 		<?php
 			$next = wp_next_scheduled( 'post-by-email-wp-mail.php' );
-			echo get_date_from_gmt( date( 'Y-m-d H:i:s', $next ) , "$date_format, $time_format");
+			echo get_date_from_gmt( date( 'Y-m-d H:i:s', $next ) , "$date_format, $time_format" );
 		?>
 	</p>
-	<p><a href="<?php echo site_url('wp-mail.php'); ?>"><?php _e( 'Check now', 'post-by-email' ) ?></a></p>
-	<?php if( $log['messages'] ) : ?>
-		<h3><?php _e( 'Log Messages', 'post-by-email' ); ?></h3>
-		<?php foreach($log['messages'] as $message) : ?>
-			<li><?php echo $message; ?></li>
-		<?php endforeach; ?>
+	<p>
+		<a href="<?php echo site_url( 'wp-mail.php' ); ?>" class="button-secondary">
+			<?php _e( 'Check now', 'post-by-email' ) ?>
+		</a>
+	</p>
+
+	<?php if( isset( $options['log'] ) && $options['log'] != array() ) : ?>
+
+		<p>
+			<a href="" id="clearLog" ><?php _e('Clear Log', 'post-by-email' ); ?></a>
+
+			<script type="text/javascript" >
+			jQuery('a#clearLog').click(function(e) {
+
+				var data = {
+					action: 'post_by_email_clear_log'
+				};
+
+				jQuery.post(ajaxurl, data, function(response) {
+					jQuery('table#logTable').hide();
+					jQuery('a#clearLog').hide();
+				});
+
+				e.preventDefault();
+
+			});
+			</script>
+
+		</p>
+
+		<table id="logTable" class="widefat fixed" cellspacing="0">
+			<thead>
+				<tr>
+					<th colspan='2'><?php _e('Log Messages', 'post-by-email' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach( ($options['log']) as $entry ) : ?>
+					<tr class="alternate">
+						<td><?php echo date_i18n( "$date_format, $time_format", $entry['timestamp'] ); ?></td>
+						<td><?php echo $entry['message']; ?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
 	<?php endif; ?>
 </div>

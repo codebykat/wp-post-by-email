@@ -84,7 +84,7 @@ class Post_By_Email {
 		add_action( 'plugins_loaded', array( $this, 'load' ) );
 
 		// add hooks to check for mail
-		add_action( 'wp-mail.php', array( $this, 'check_email' ) );
+		add_action( 'wp-mail.php', array( $this, 'manual_check_email' ) );
 		add_action( 'post-by-email-wp-mail.php', array( $this, 'check_email' ) );
 	}
 
@@ -159,6 +159,21 @@ class Post_By_Email {
 	}
 
 	/**
+	 * Run "check_email" when not called by wp_cron
+	 *
+	 * @since    0.9.9
+	 */
+	public function manual_check_email() {
+		// update scheduled check so next one is an hour from last manual check
+		wp_clear_scheduled_hook( 'post-by-email-wp-mail.php' );
+		wp_schedule_event( current_time( 'timestamp', 1 ) + HOUR_IN_SECONDS, 'hourly', 'post-by-email-wp-mail.php' );
+
+		self::check_email();
+
+		wp_safe_redirect( admin_url( 'tools.php?page=post-by-email' ) );
+	}
+
+	/**
 	 * Check for new messages and post them to the blog.
 	 *
 	 * @since    0.9.0
@@ -170,24 +185,26 @@ class Post_By_Email {
 
 		$last_checked = get_transient( 'mailserver_last_checked' );
 
-		if ( $last_checked && ! WP_DEBUG )
-			wp_die( __( 'Slow down cowboy, no need to check for new mails so often!', 'post-by-email' ) );
+		$options = get_option( 'post_by_email_options' );
+		$options['last_checked'] = current_time( 'timestamp' );
+		update_option( 'post_by_email_options', $options );
+
+		if ( $last_checked && ! WP_DEBUG ) {
+			$log_message = __( 'Slow down cowboy, no need to check for new mails so often!', 'post-by-email' );
+			self::save_log_message( $log_message );
+			return;
+		}
 
 		set_transient( 'mailserver_last_checked', true, WP_MAIL_INTERVAL );
-
-		$options = get_option( 'post_by_email_options' );
 
 		// if options aren't set, there's nothing to do, move along
 		foreach( array( 'mailserver_url', 'mailserver_login', 'mailserver_pass' ) as $optname ) {
 			if( ! $options[$optname] || $options[$optname] == $this->default_options[$optname] ) {
-				// TODO logging
+				$log_message = __( 'Options not set; skipping.', 'post-by-email' );
+				self::save_log_message( $log_message );
 				return;
 			}
 		}
-
-		$log = array();
-		$log['last_checked'] = current_time( 'timestamp' );
-		$log['messages'] = array();
 
 		$time_difference = get_option( 'gmt_offset' ) * HOUR_IN_SECONDS;
 
@@ -205,16 +222,20 @@ class Post_By_Email {
 			$uids = $test['match'];
 		}
 		catch( Horde_Imap_Client_Exception $e ) {
-			self::save_log_and_die( __( 'An error occurred: ', 'post-by-email') . $e->getMessage(), $log );
+			self::save_log_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
+			return;
 		}
 
 		if( 0 === sizeof( $uids ) ) {
 			$pop3->shutdown();
-			self::save_log_and_die( __( 'There doesn&#8217;t seem to be any new mail.', 'post-by-email' ), $log );
+			self::save_log_message( __( 'There doesn&#8217;t seem to be any new mail.', 'post-by-email' ) );
+			return;
 		}
 
 
 		foreach( $uids as $id ) {
+			$log_message = '';
+
 			$uid = new Horde_Imap_Client_Ids( $id );
 
 			// get headers
@@ -248,7 +269,7 @@ class Post_By_Email {
 					$author = trim( $author );
 				$author = sanitize_email( $author );
 				if ( is_email( $author ) ) {
-					$log['messages'][] = '<p>' . sprintf( __( 'Author is %s', 'post-by-email' ), $author ) . '</p>';
+					$log_message .= '<p>' . sprintf( __( 'Author is %s', 'post-by-email' ), $author ) . '</p>';
 					$userdata = get_user_by( 'email', $author );
 					if ( ! empty( $userdata ) ) {
 						$post_author = $userdata->ID;
@@ -362,7 +383,7 @@ class Post_By_Email {
 
 			$post_ID = wp_insert_post( $post_data );
 			if ( is_wp_error( $post_ID ) )
-				$log['messages'][] = "\n" . $post_ID->get_error_message();
+				$log_message .= "\n" . $post_ID->get_error_message();
 
 			// We couldn't post, for whatever reason. Better move forward to the next email.
 			if ( empty( $post_ID ) )
@@ -370,8 +391,10 @@ class Post_By_Email {
 
 			do_action( 'publish_phone', $post_ID );
 
-			$log['messages'][] = "\n<p>" . sprintf( __( 'Author: %s', 'post-by-email' ), esc_html( $post_author ) ) . '</p>';
-			$log['messages'][] = "\n<p>" . sprintf( __( 'Posted title: %s', 'post-by-email' ), esc_html( $post_title ) ) . '</p>';
+			$log_message .= "\n<p>" . sprintf( __( 'Author: %s', 'post-by-email' ), esc_html( $post_author ) ) . '</p>';
+			$log_message .= "\n<p>" . sprintf( __( 'Posted title: %s', 'post-by-email' ), esc_html( $post_title ) ) . '</p>';
+
+			self::save_log_message($log_message);
 
 		} // end foreach
 
@@ -383,32 +406,32 @@ class Post_By_Email {
 			) );
 		}
 		catch ( Horde_Imap_Client_Exception $e ) {
-			self::save_log_and_die( __( 'An error occurred: ', 'post-by-email') . $e->getMessage(), $log );
+			self::save_log_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
 		}
 
 		$pop3->shutdown();
-
-		foreach( $log['messages'] as $message ) { echo $message; }
-		$options['log'] = $log;
-		update_option( 'post_by_email_options', $options );
 	}
 
 	/**
-	 * Save a message to the log file and wp_die()
+	 * Save a message to the log file
 	 *
-	 * @since    0.9.0
+	 * @since    0.9.9
 	 *
 	 * @param    string    $error    Error message to save to the log.
 	 * @param    array     $log      The log file to save back to the plugin options.
 	 */
-	protected function save_log_and_die( $error, $log ) {
-		$log['messages'][] = $error;
-
+	protected function save_log_message( $message ) {
 		$options = get_option( 'post_by_email_options' );
+
+		$log = array();
+		if( isset( $options['log'] ) ) {
+			$log = $options['log'];
+		}
+
+		array_unshift( $log, array( 'timestamp'=>current_time( 'timestamp' ), 'message'=>$message ) );
+
 		$options['log'] = $log;
 		update_option( 'post_by_email_options', $options );
-
-		wp_die( $error );
 	}
 
 	/**

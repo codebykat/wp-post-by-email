@@ -7,6 +7,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	function setUp() {
 		parent::setUp();
 		$this->plugin = Post_By_Email::get_instance();
+		$this->pluginAdmin = Post_By_Email_Admin::get_instance();
 	}
 
 	function test_plugin_activation() {
@@ -46,5 +47,26 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 
 	function test_check_email() {
 		$this->markTestIncomplete();
+	}
+
+	function test_save_log_message() {
+		// testing a protected method: bad idea?
+		$this->markTestIncomplete();
+
+		// // if the log doesn't exist, it should be created
+		// $options = get_option( 'post_by_email_options' );
+		// unset($options['log']);
+		// update_option( 'post_by_email_options', $options);
+
+		// $this->plugin->save_log_message("Test message");
+
+		// $options = get_option( 'post_by_email_options' );
+		// $this->assertEquals( 1, sizeof( $options['log'] ) );
+
+		// // if the log exists already, the new message should be added to it
+		// $this->plugin->save_log_message("Test message two");
+
+		// $options = get_option( 'post_by_email_options' );
+		// $this->assertEquals( 2, sizeof( $options['log'] ) );
 	}
 }

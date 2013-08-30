@@ -41,6 +41,10 @@ To run the tests:
 
 == Changelog ==
 
+= 0.9.9 =
+* Better logging, no more wp_die().
+* When email is checked manually, reschedule the next wp_cron check to an hour later.
+
 = 0.9.8 =
 * Use wp_cron to schedule hourly mail checks.
 

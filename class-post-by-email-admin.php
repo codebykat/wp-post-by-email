@@ -36,6 +36,9 @@ class Post_By_Email_Admin {
 
 		// disable post by email settings on Settings->Writing page
 		add_filter( 'enable_post_by_email_configuration', '__return_false' );
+
+		// AJAX hook to clear the log
+		add_action( 'wp_ajax_post_by_email_clear_log', array( $this, 'clear_log') );
 	}
 
 	/**
@@ -75,6 +78,10 @@ class Post_By_Email_Admin {
 			$options['default_email_category'] = '';
 		}
 
+		// TODO this is a hack because validate is getting called
+		// when i call update_option from clear_log.  need to figure out why.
+		$options['log'] = $input['log'];
+
 		return $options;
 	}
 
@@ -100,6 +107,22 @@ class Post_By_Email_Admin {
 	 */
 	public function display_plugin_admin_page() {
 		include_once( plugin_dir_path( __FILE__ ) . 'views/admin.php' );
+	}
+
+	/**
+	 * Clear the log file
+	 *
+	 * @since    0.9.9
+	*/
+	public function clear_log() {
+		// TODO: check_ajax_referer()
+		if( current_user_can( 'manage_options' ) ) {
+			$options = get_option( 'post_by_email_options' );
+			$options['log'] = array();
+			update_option( 'post_by_email_options', $options );
+		}
+
+		die();
 	}
 
 }

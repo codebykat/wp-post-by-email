@@ -36,10 +36,14 @@ Like WordPress Core, this plugin includes unit tests written in PHPUnit.
 
 To run the tests:
 
-**1. Set up the WordPress testing library as described in [Handbook:** Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).  
+1. Set up the WordPress testing library as described in [Handbook: Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).  
 1. From the plugin directory, run `WP_TESTS_DIR=/path/to/WordPress/test/install phpunit`
 
 ## Changelog ##
+
+### 0.9.9 ###
+* Better logging, no more wp_die().
+* When email is checked manually, reschedule the next wp_cron check to an hour later.
 
 ### 0.9.8 ###
 * Use wp_cron to schedule hourly mail checks.

@@ -42,6 +42,8 @@ To run the tests:
 == Changelog ==
 
 = 1.0.0 =
+* Added SSL and IMAP support.
+* Added option to mark emails "read" instead of deleting them after processing.
 * Added support for HTML formatted emails.
 * Refactored check_email function.
 * Fixed a bug that caused the log file to behave inconsistently.

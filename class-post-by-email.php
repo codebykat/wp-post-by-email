@@ -63,12 +63,15 @@ class Post_By_Email {
 	 *
 	 * @var      array
 	 */
-	protected $default_options = array(
-		'mailserver_url' => 'mail.example.com',
-		'mailserver_login' => 'login@example.com',
-		'mailserver_pass' => 'password',
-		'mailserver_port' => 110,
-		'default_email_category' => '');
+	protected static $default_options = array(
+		'mailserver_url'			=> 'mail.example.com',
+		'mailserver_login'			=> 'login@example.com',
+		'mailserver_pass'			=> 'password',
+		'mailserver_port'			=> 993,
+		'ssl'						=> true,
+		'default_email_category'	=> '',
+		'delete_messages'			=> false
+	);
 
 	/**
 	* Active connection.
@@ -122,21 +125,21 @@ class Post_By_Email {
 	 */
 	public static function activate( $network_wide ) {
 		// set up plugin options
-		$options = get_option( 'post_by_email_options' );
+		$plugin_options = get_option( 'post_by_email_options' );
 
-		if( ! $options ) {
-			$options = $this->default_options;
+		$options = self::$default_options;
 
-			// if old global options exist, copy them into plugin options
-			foreach( array_keys( $this->default_options ) as $optname ) {
-				if( get_option( $optname ) ) {
-					$options[ $optname ] = get_option( $optname );
-					//delete_option( $optname );			
-				}
+		// if old global options exist, copy them into plugin options
+		foreach( array_keys( self::$default_options ) as $optname ) {
+			if( isset( $plugin_options[$optname] ) ) {
+				$options[$optname] = $plugin_options[$optname];
 			}
-
-			update_option( 'post_by_email_options', $options );
+			elseif ( get_option( $optname ) ) {
+				$options[ $optname ] = get_option( $optname );
+			}
 		}
+
+		update_option( 'post_by_email_options', $options );
 
 		// if log already exists, this will return false, and that is okay
 		add_option( 'post_by_email_log', array(), '', 'no' );
@@ -210,7 +213,7 @@ class Post_By_Email {
 
 		// if options aren't set, there's nothing to do, move along
 		foreach( array( 'mailserver_url', 'mailserver_login', 'mailserver_pass' ) as $optname ) {
-			if( ! $options[$optname] || $options[$optname] == $this->default_options[$optname] ) {
+			if( ! $options[$optname] || $options[$optname] == self::$default_options[$optname] ) {
 				$log_message = __( 'Options not set; skipping.', 'post-by-email' );
 				$this->save_log_message( $log_message );
 				return;
@@ -319,13 +322,12 @@ class Post_By_Email {
 			// $log_message .= "\n<p>" . sprintf( __( 'Posted title: %s', 'post-by-email' ), esc_html( $post_title ) ) . '</p>';
 			$log_message .= "<br />" . __( 'Posted:', 'post-by-email') . ' <a href="' . get_permalink( $post_ID ) . '">' . esc_html( $post_title ) . '</a>';
 
-			$this->save_log_message( $log_message );
-
 		} // end foreach
 
-		// delete all processed emails
-		if( ! WP_DEBUG )
-			$this->delete_messages( $uids );
+		$this->save_log_message( $log_message );
+
+		// mark all processed emails as read
+		$this->mark_as_read( $uids, $options['delete_messages'] );
 
 		$this->connection->shutdown();
 	}
@@ -340,21 +342,31 @@ class Post_By_Email {
 	 * @return   object
 	 */
 	protected function open_mailbox_connection( $options ) {
-		$pop3 = new Horde_Imap_Client_Socket_Pop3( array( 'username' => $options['mailserver_login'],
-															'password' => $options['mailserver_pass'],
-															'hostspec' => $options['mailserver_url'],
-															'port' => $options['mailserver_port'] ) );
-		$pop3->_setInit( 'authmethod', 'USER' );
+		$connection_options = array( 'username' => $options['mailserver_login'],
+										'password' => $options['mailserver_pass'],
+										'hostspec' => $options['mailserver_url'],
+										'port' => $options['mailserver_port'],
+										'secure' => $options['ssl'] ? 'ssl' : false
+									);
+
+		if( in_array( $options['mailserver_port'], array( 143, 993 ) ) ) {  // IMAP
+			$connection = new Horde_Imap_Client_Socket( $connection_options );
+
+		}
+		else {  // POP3
+			$connection = new Horde_Imap_Client_Socket_Pop3( $connection_options );
+		}
+		$connection->_setInit( 'authmethod', 'USER' );
 
 		try {
-			$pop3->login();
+			$connection->login();
 		}
 		catch( Horde_Imap_Client_Exception $e ) {
 			$this->save_log_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
 			return false;
 		}
 
-		return $pop3;
+		return $connection;
 	}
 
 	/**
@@ -369,11 +381,19 @@ class Post_By_Email {
 			return;
 
 		try {
-			$test = $this->connection->search( 'INBOX' );
+			// POP3 doesn't understand about read/unread messages
+			if( 'Horde_Imap_Client_Socket_Pop3' == get_class( $this->connection ) ) {
+				$test = $this->connection->search( 'INBOX' );
+			}
+			else {
+				$search_query = new Horde_Imap_Client_Search_Query();
+				$search_query->flag( Horde_Imap_Client::FLAG_SEEN, false );
+				$test = $this->connection->search( 'INBOX', $search_query );
+			}
 			$uids = $test['match'];
 		}
 		catch( Horde_Imap_Client_Exception $e ) {
-			$this->save_log_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
+			$this->save_log_message( __( 'An error occurred: ', 'post-by-email' ) . $e->getMessage() );
 			return false;
 		}
 		return $uids;
@@ -512,26 +532,31 @@ class Post_By_Email {
 			$content = $body->getContents();
 		}
 
-		$content = strip_tags( $content, '<img>' );
+		$content = strip_tags( $content, '<img><p><br><i><b><u><em><strong><strike><font><span><div><style><a>' );
 		$content = trim( $content );
 
 		return $content;
 	}
 
 	/**
-	 * Delete a list of messages from the server.
+	 * Mark a list of messages read on the server.
 	 *
 	 * @since    1.0.0
 	 *
-	 * @param    array    UIDs of messages to delete
+	 * @param    array    $uids      UIDs of messages that have been processed
+	 * @param    bool     $delete    Whether to delete read messages
 	 */
-	protected function delete_messages( $uids ) {
+	protected function mark_as_read( $uids, $delete=false ) {
 		if( ! $this->connection )
 			return;
 
+		$flag = Horde_Imap_Client::FLAG_SEEN;
+		if( $delete )
+			$flag = Horde_Imap_Client::FLAG_DELETED;
+
 		try {
 			$this->connection->store( 'INBOX', array(
-				'add' => array( Horde_Imap_Client::FLAG_DELETED ),
+				'add' => array( $flag ),
 				'ids' => $uids
 			) );
 		}

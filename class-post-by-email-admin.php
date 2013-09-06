@@ -78,6 +78,9 @@ class Post_By_Email_Admin {
 			$options['default_email_category'] = '';
 		}
 
+		$options['ssl'] = isset( $input['ssl'] );
+		$options['delete_messages'] = isset( $input['delete_messages'] );
+
 		return $options;
 	}
 

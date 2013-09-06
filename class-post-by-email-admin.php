@@ -111,14 +111,14 @@ class Post_By_Email_Admin {
 	}
 
 	/**
-	 * Clear the log file
+	 * Clear the log file.
 	 *
 	 * @since    0.9.9
 	*/
 	public function clear_log() {
 		check_ajax_referer( 'post-by-email-clear-log', 'security' );
 		if( current_user_can( 'manage_options' ) ) {
-			delete_option( 'post_by_email_log' );
+			update_option( 'post_by_email_log', array() );
 		}
 
 		die();

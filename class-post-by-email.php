@@ -24,10 +24,10 @@ class Post_By_Email {
 	 *
 	 * @var     string
 	 */
-	protected $version = '0.9.7';
+	protected $version = '1.0.0';
 
 	/**
-	 * Unique identifier for your plugin.
+	 * Unique identifier for the plugin.
 	 *
 	 * Use this value (not the variable name) as the text domain when internationalizing strings of text. It should
 	 * match the Text Domain file header in the main plugin file.
@@ -70,6 +70,14 @@ class Post_By_Email {
 		'mailserver_port' => 110,
 		'default_email_category' => '');
 
+	/**
+	* Active connection.
+	*
+	* @since    1.0.0
+	*
+	* @var      object
+	*/
+	protected $connection;
 
 	/**
 	 * Initialize the plugin by setting localization, filters, and administration functions.
@@ -112,7 +120,7 @@ class Post_By_Email {
 	 *
 	 * @param    boolean    $network_wide    True if WPMU superadmin uses "Network Activate" action, false if WPMU is disabled or plugin is activated on an individual blog.
 	 */
-	function activate( $network_wide ) {
+	public static function activate( $network_wide ) {
 		// set up plugin options
 		$options = get_option( 'post_by_email_options' );
 
@@ -130,6 +138,9 @@ class Post_By_Email {
 			update_option( 'post_by_email_options', $options );
 		}
 
+		// if log already exists, this will return false, and that is okay
+		add_option( 'post_by_email_log', array(), '', 'no' );
+
 		// schedule hourly mail checks with wp_cron
 		if( ! wp_next_scheduled( 'post-by-email-wp-mail.php' ) ) {
 			wp_schedule_event( current_time( 'timestamp', 1 ), 'hourly', 'post-by-email-wp-mail.php' );
@@ -141,7 +152,7 @@ class Post_By_Email {
 	*
 	* @since    0.9.8
 	*/
-	function deactivate() {
+	public static function deactivate() {
 		wp_clear_scheduled_hook( 'post-by-email-wp-mail.php' );
 	}
 
@@ -159,7 +170,7 @@ class Post_By_Email {
 	}
 
 	/**
-	 * Run "check_email" when not called by wp_cron
+	 * Run "check_email" when not called by wp_cron.
 	 *
 	 * @since    0.9.9
 	 */
@@ -168,7 +179,7 @@ class Post_By_Email {
 		wp_clear_scheduled_hook( 'post-by-email-wp-mail.php' );
 		wp_schedule_event( current_time( 'timestamp', 1 ) + HOUR_IN_SECONDS, 'hourly', 'post-by-email-wp-mail.php' );
 
-		self::check_email();
+		$this->check_email();
 
 		wp_safe_redirect( admin_url( 'tools.php?page=post-by-email' ) );
 	}
@@ -191,7 +202,7 @@ class Post_By_Email {
 
 		if ( $last_checked && ! WP_DEBUG ) {
 			$log_message = __( 'Slow down cowboy, no need to check for new mails so often!', 'post-by-email' );
-			self::save_log_message( $log_message );
+			$this->save_log_message( $log_message );
 			return;
 		}
 
@@ -201,163 +212,70 @@ class Post_By_Email {
 		foreach( array( 'mailserver_url', 'mailserver_login', 'mailserver_pass' ) as $optname ) {
 			if( ! $options[$optname] || $options[$optname] == $this->default_options[$optname] ) {
 				$log_message = __( 'Options not set; skipping.', 'post-by-email' );
-				self::save_log_message( $log_message );
+				$this->save_log_message( $log_message );
 				return;
 			}
 		}
 
-		$time_difference = get_option( 'gmt_offset' ) * HOUR_IN_SECONDS;
+		$this->connection = $this->open_mailbox_connection( $options );
 
-		$phone_delim = '::';
-
-		$pop3 = new Horde_Imap_Client_Socket_Pop3( array( 'username' => $options['mailserver_login'],
-															'password' => $options['mailserver_pass'],
-															'hostspec' => $options['mailserver_url'],
-															'port' => $options['mailserver_port'] ) );
-		$pop3->_setInit( 'authmethod', 'USER' );
-
-		try {
-			$pop3->login();
-			$test = $pop3->search( 'INBOX' );
-			$uids = $test['match'];
-		}
-		catch( Horde_Imap_Client_Exception $e ) {
-			self::save_log_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
+		if(! $this->connection ) {
 			return;
 		}
+
+		$uids = $this->get_messages();
 
 		if( 0 === sizeof( $uids ) ) {
-			$pop3->shutdown();
-			self::save_log_message( __( 'There doesn&#8217;t seem to be any new mail.', 'post-by-email' ) );
+			$this->save_log_message( __( 'There doesn&#8217;t seem to be any new mail.', 'post-by-email' ) );
+			$this->connection->shutdown();
 			return;
 		}
 
+		$log_message = sprintf( _n( 'Found 1 new message.', 'Found %s new messages.', sizeof( $uids ), 'post-by-email' ), sizeof( $uids ) );
+
+		$time_difference = get_option( 'gmt_offset' ) * HOUR_IN_SECONDS;
+		$phone_delim = '::';
 
 		foreach( $uids as $id ) {
-			$log_message = '';
-
 			$uid = new Horde_Imap_Client_Ids( $id );
 
 			// get headers
-			$headerquery = new Horde_Imap_Client_Fetch_Query();
-			$headerquery->headerText( array() );
-			$headerlist = $pop3->fetch( 'INBOX', $headerquery, array(
-				'ids' => $uid
-			));
-
-			$headers = $headerlist->first()->getHeaderText( 0, Horde_Imap_Client_Data_Fetch::HEADER_PARSE );
+			$headers = $this->get_message_headers( $uid );
 
 			/* Subject */
 			// Captures any text in the subject before $phone_delim as the subject
 			$subject = $headers->getValue( 'Subject' );
 			$subject = explode( $phone_delim, $subject );
 			$subject = $subject[0];
+			$subject = trim( $subject );
+
 
 			/* Author */
-			$post_author = 1;
-			$author_found = false;
+			$from_email = $this->get_message_author( $headers );
 
-			// Set the author using the email address (From or Reply-To, the last used)
-			// otherwise use the site admin
-			$author = $headers->getValue( 'From' );
-			$replyto = $headers->getValue( 'Reply-To' );
+			$userdata = get_user_by( 'email', $from_email );
+			if ( ! empty( $userdata ) ) {
+				$post_author = $userdata->ID;
 
-			if ( ! $author_found ) {
-				if ( preg_match( '|[a-z0-9_.-]+@[a-z0-9_.-]+(?!.*<)|i', $author, $matches ) )
-					$author = $matches[0];
-				else
-					$author = trim( $author );
-				$author = sanitize_email( $author );
-				if ( is_email( $author ) ) {
-					$log_message .= '<p>' . sprintf( __( 'Author is %s', 'post-by-email' ), $author ) . '</p>';
-					$userdata = get_user_by( 'email', $author );
-					if ( ! empty( $userdata ) ) {
-						$post_author = $userdata->ID;
-						$author_found = true;
-					}
-				}
+				// Set $post_status based on author's publish_posts capability
+				$user = new WP_User( $post_author );
+				$post_status = ( $user->has_cap( 'publish_posts' ) ) ? 'publish' : 'pending';
+			}
+			else {
+				// use admin if no author found
+				$post_author = 1;
+				$post_status = 'pending';
 			}
 
 
 			/* Date */
-			$date = $headers->getValue( 'Date' );
-			$dmonths = array( 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' );
-
-			// of the form '20 Mar 2002 20:32:37'
-			$ddate = trim( $date );
-			if ( strpos( $ddate, ',' ) ) {
-				$ddate = trim( substr( $ddate, strpos( $ddate, ',' ) + 1, strlen( $ddate ) ) );
-			}
-
-			$date_arr = explode( ' ', $ddate );
-			$date_time = explode( ':', $date_arr[3] );
-
-			$ddate_H = $date_time[0];
-			$ddate_i = $date_time[1];
-			$ddate_s = $date_time[2];
-
-			$ddate_m = $date_arr[1];
-			$ddate_d = $date_arr[0];
-			$ddate_Y = $date_arr[2];
-
-			for ( $j = 0; $j < 12; $j++ ) {
-				if ( $ddate_m == $dmonths[$j] ) {
-					$ddate_m = $j+1;
-				}
-			}
-
-			$time_zn = intval( $date_arr[4] ) * 36;
-			$ddate_U = gmmktime( $ddate_H, $ddate_i, $ddate_s, $ddate_m, $ddate_d, $ddate_Y );
-			$ddate_U = $ddate_U - $time_zn;
+			$ddate_U = $this->get_message_date( $headers );
 			$post_date = gmdate( 'Y-m-d H:i:s', $ddate_U + $time_difference );
 			$post_date_gmt = gmdate( 'Y-m-d H:i:s', $ddate_U );
 
 
-
 			/* Message body */
-			$query = new Horde_Imap_Client_Fetch_Query();
-			$query->structure();
-
-			$list = $pop3->fetch( 'INBOX', $query, array(
-				'ids' => $uid
-			));
-
-			$part = $list->first()->getStructure();
-			$id = $part->findBody();
-			$body = $part->getPart( $id );
-
-			$query2 = new Horde_Imap_Client_Fetch_Query();
-			$query2->bodyPart( $id, array(
-				'decode' => true,
-				'peek' => true
-			));
-
-			$list2 = $pop3->fetch( 'INBOX', $query2, array(
-				'ids' => $uid
-			));
-
-			$message2 = $list2->first();
-			$content = $message2->getBodyPart( $id );
-			if ( ! $message2->getBodyPartDecode( $id ) ) {
-				// Quick way to transfer decode contents
-				$body->setContents( $content );
-				$content = $body->getContents();
-			}
-
-
-			// Set $post_status based on $author_found and on author's publish_posts capability
-			if ( $author_found ) {
-				$user = new WP_User( $post_author );
-				$post_status = ( $user->has_cap( 'publish_posts' ) ) ? 'publish' : 'pending';
-			} else {
-				// Author not found in DB, set status to pending. Author already set to admin.
-				$post_status = 'pending';
-			}
-
-			$subject = trim( $subject );
-
-			$content = strip_tags( $content, '<img><p><br><i><b><u><em><strong><strike><font><span><div>' );
-			$content = trim( $content );
+			$content = $this->get_message_body( $uid );
 
 			//Give Post-By-Email extending plugins full access to the content
 			//Either the raw content or the content of the last quoted-printable section
@@ -371,19 +289,25 @@ class Post_By_Email {
 
 			$post_content = apply_filters( 'phone_content' , $content );
 
+			/* post title */
 			$post_title = xmlrpc_getposttitle( $content );
 
 			if ( '' == $post_title )
 				$post_title = $subject;
 
+			/* category */
 			$post_category = array( $options['default_email_category'] );
 
-			$post_data = compact( 'post_content','post_title','post_date','post_date_gmt','post_author','post_category', 'post_status' );
+
+			/* create the post */
+			$post_data = compact( 'post_content', 'post_title', 'post_date', 'post_date_gmt', 'post_author', 'post_category', 'post_status' );
 			$post_data = wp_slash( $post_data );
 
 			$post_ID = wp_insert_post( $post_data );
-			if ( is_wp_error( $post_ID ) )
+			if ( is_wp_error( $post_ID ) ) {
 				$log_message .= "\n" . $post_ID->get_error_message();
+				$this->save_log_message( $log_message );
+			}
 
 			// We couldn't post, for whatever reason. Better move forward to the next email.
 			if ( empty( $post_ID ) )
@@ -391,42 +315,241 @@ class Post_By_Email {
 
 			do_action( 'publish_phone', $post_ID );
 
-			$log_message .= "\n<p>" . sprintf( __( 'Author: %s', 'post-by-email' ), esc_html( $post_author ) ) . '</p>';
-			$log_message .= "\n<p>" . sprintf( __( 'Posted title: %s', 'post-by-email' ), esc_html( $post_title ) ) . '</p>';
+			// $log_message .= "\n<p>" . sprintf( __( 'Author: %s', 'post-by-email' ), esc_html( $post_author ) ) . '</p>';
+			// $log_message .= "\n<p>" . sprintf( __( 'Posted title: %s', 'post-by-email' ), esc_html( $post_title ) ) . '</p>';
+			$log_message .= "<br />" . __( 'Posted:', 'post-by-email') . ' <a href="' . get_permalink( $post_ID ) . '">' . esc_html( $post_title ) . '</a>';
 
-			self::save_log_message($log_message);
+			$this->save_log_message( $log_message );
 
 		} // end foreach
 
 		// delete all processed emails
+		if( ! WP_DEBUG )
+			$this->delete_messages( $uids );
+
+		$this->connection->shutdown();
+	}
+
+	/**
+	 * Establishes the connection to the mailserver.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    array    $options    Options array
+	 *
+	 * @return   object
+	 */
+	protected function open_mailbox_connection( $options ) {
+		$pop3 = new Horde_Imap_Client_Socket_Pop3( array( 'username' => $options['mailserver_login'],
+															'password' => $options['mailserver_pass'],
+															'hostspec' => $options['mailserver_url'],
+															'port' => $options['mailserver_port'] ) );
+		$pop3->_setInit( 'authmethod', 'USER' );
+
 		try {
-			$pop3->store( 'INBOX', array(
+			$pop3->login();
+		}
+		catch( Horde_Imap_Client_Exception $e ) {
+			$this->save_log_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
+			return false;
+		}
+
+		return $pop3;
+	}
+
+	/**
+	 * Retrieve the list of new message IDs from the server.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @return   array    Array of message UIDs
+	 */
+	protected function get_messages() {
+		if( ! $this->connection )
+			return;
+
+		try {
+			$test = $this->connection->search( 'INBOX' );
+			$uids = $test['match'];
+		}
+		catch( Horde_Imap_Client_Exception $e ) {
+			$this->save_log_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
+			return false;
+		}
+		return $uids;
+	}
+
+	/**
+	 * Retrieve message headers.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    int    $uid    Message UID
+	 *
+	 * @return   object
+	 */
+	protected function get_message_headers( $uid ) {
+		$headerquery = new Horde_Imap_Client_Fetch_Query();
+		$headerquery->headerText( array() );
+		$headerlist = $this->connection->fetch( 'INBOX', $headerquery, array(
+			'ids' => $uid
+		));
+
+		$headers = $headerlist->first()->getHeaderText( 0, Horde_Imap_Client_Data_Fetch::HEADER_PARSE );
+		return $headers;
+	}
+
+	/**
+	 * Find the email address of the message sender from the headers.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    object    $headers    Message headers
+	 *
+	 * @return   string|false
+	 */
+	protected function get_message_author( $headers ) {
+		// Set the author using the email address (From or Reply-To, the last used)
+		$author = $headers->getValue( 'From' );
+		// $replyto = $headers->getValue( 'Reply-To' );  // this is not used and doesn't make sense
+
+		if ( preg_match( '|[a-z0-9_.-]+@[a-z0-9_.-]+(?!.*<)|i', $author, $matches ) )
+			$author = $matches[0];
+		else
+			$author = trim( $author );
+
+		$author = sanitize_email( $author );
+
+		if ( is_email( $author ) ) {
+			return $author;
+		}
+
+		return false;  // author not found
+	}
+
+	/**
+	 * Get the date of a message from its headers.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    object    $headers    Message headers
+	 *
+	 * @return   string
+	 */
+	protected function get_message_date( $headers ) {
+		$date = $headers->getValue( 'Date' );
+		$dmonths = array( 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' );
+
+		// of the form '20 Mar 2002 20:32:37'
+		$ddate = trim( $date );
+		if ( strpos( $ddate, ',' ) ) {
+			$ddate = trim( substr( $ddate, strpos( $ddate, ',' ) + 1, strlen( $ddate ) ) );
+		}
+
+		$date_arr = explode( ' ', $ddate );
+		$date_time = explode( ':', $date_arr[3] );
+
+		$ddate_H = $date_time[0];
+		$ddate_i = $date_time[1];
+		$ddate_s = $date_time[2];
+
+		$ddate_m = $date_arr[1];
+		$ddate_d = $date_arr[0];
+		$ddate_Y = $date_arr[2];
+
+		for ( $j = 0; $j < 12; $j++ ) {
+			if ( $ddate_m == $dmonths[$j] ) {
+				$ddate_m = $j+1;
+			}
+		}
+
+		$time_zn = intval( $date_arr[4] ) * 36;
+		$ddate_U = gmmktime( $ddate_H, $ddate_i, $ddate_s, $ddate_m, $ddate_d, $ddate_Y );
+		$ddate_U = $ddate_U - $time_zn;
+
+		return $ddate_U;
+	}
+
+	/**
+	 * Get the content of a message from the mailserver.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    int       Message UID
+	 *
+	 * @return   string    Message content
+	 */
+	protected function get_message_body( $uid ) {
+		$query = new Horde_Imap_Client_Fetch_Query();
+		$query->structure();
+
+		$list = $this->connection->fetch( 'INBOX', $query, array(
+			'ids' => $uid
+		));
+
+		$part = $list->first()->getStructure();
+		$id = $part->findBody();
+		$body = $part->getPart( $id );
+
+		$query2 = new Horde_Imap_Client_Fetch_Query();
+		$query2->bodyPart( $id, array(
+			'decode' => true,
+			'peek' => true
+		));
+
+		$list2 = $this->connection->fetch( 'INBOX', $query2, array(
+			'ids' => $uid
+		));
+
+		$message2 = $list2->first();
+		$content = $message2->getBodyPart( $id );
+		if ( ! $message2->getBodyPartDecode( $id ) ) {
+			// Quick way to transfer decode contents
+			$body->setContents( $content );
+			$content = $body->getContents();
+		}
+
+		$content = strip_tags( $content, '<img><p><br><i><b><u><em><strong><strike><font><span><div>' );
+		$content = trim( $content );
+
+		return $content;
+	}
+
+	/**
+	 * Delete a list of messages from the server.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    array    UIDs of messages to delete
+	 */
+	protected function delete_messages( $uids ) {
+		if( ! $this->connection )
+			return;
+
+		try {
+			$this->connection->store( 'INBOX', array(
 				'add' => array( Horde_Imap_Client::FLAG_DELETED ),
 				'ids' => $uids
 			) );
 		}
 		catch ( Horde_Imap_Client_Exception $e ) {
-			self::save_log_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
+			$this->save_log_message( __( 'An error occurred: ', 'post-by-email' ) . $e->getMessage() );
 		}
-
-		$pop3->shutdown();
 	}
 
 	/**
-	 * Save a message to the log file
+	 * Save a message to the log file.
 	 *
 	 * @since    0.9.9
 	 *
-	 * @param    string    $error    Error message to save to the log.
+	 * @param    string    $message    Error message to save to the log.
 	 */
 	protected function save_log_message( $message ) {
 		$log = get_option( 'post_by_email_log', array() );
 
 		array_unshift( $log, array( 'timestamp'=>current_time( 'timestamp' ), 'message'=>$message ) );
 
-		if( ! add_option( 'post_by_email_log', $log, '', 'no' ) ) {
-			update_option( 'post_by_email_log', $log );
-		}
+		update_option( 'post_by_email_log', $log );
 	}
 
 	/**

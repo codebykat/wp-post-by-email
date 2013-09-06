@@ -41,6 +41,10 @@ To run the tests:
 
 == Changelog ==
 
+= 1.0.0 =
+* Refactored check_email function.
+* Fixed a bug that caused the log file to behave inconsistently.
+
 = 0.9.9 =
 * Better logging, no more wp_die().
 * When email is checked manually, reschedule the next wp_cron check to an hour later.

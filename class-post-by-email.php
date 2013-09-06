@@ -488,11 +488,14 @@ class Post_By_Email {
 		));
 
 		$part = $list->first()->getStructure();
-		$id = $part->findBody();
-		$body = $part->getPart( $id );
+		$body_id = $part->findBody('html');
+		if( is_null( $body_id ) ) {
+			$body_id = $part->findBody();
+		}
+		$body = $part->getPart( $body_id );
 
 		$query2 = new Horde_Imap_Client_Fetch_Query();
-		$query2->bodyPart( $id, array(
+		$query2->bodyPart( $body_id, array(
 			'decode' => true,
 			'peek' => true
 		));
@@ -502,14 +505,14 @@ class Post_By_Email {
 		));
 
 		$message2 = $list2->first();
-		$content = $message2->getBodyPart( $id );
-		if ( ! $message2->getBodyPartDecode( $id ) ) {
+		$content = $message2->getBodyPart( $body_id );
+		if ( ! $message2->getBodyPartDecode( $body_id ) ) {
 			// Quick way to transfer decode contents
 			$body->setContents( $content );
 			$content = $body->getContents();
 		}
 
-		$content = strip_tags( $content, '<img><p><br><i><b><u><em><strong><strike><font><span><div>' );
+		$content = strip_tags( $content, '<img>' );
 		$content = trim( $content );
 
 		return $content;

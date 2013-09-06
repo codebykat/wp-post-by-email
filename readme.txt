@@ -42,6 +42,7 @@ To run the tests:
 == Changelog ==
 
 = 1.0.0 =
+* Added support for HTML formatted emails.
 * Refactored check_email function.
 * Fixed a bug that caused the log file to behave inconsistently.
 

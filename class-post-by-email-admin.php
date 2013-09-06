@@ -58,7 +58,7 @@ class Post_By_Email_Admin {
 	 * @param   array    $input    Form fields submitted from the settings page.
 	 */
 	public function post_by_email_validate($input) {
-		// load all the options so we don't wipe out the log
+		// load all the options so we don't wipe out pre-existing stuff
 		$options = get_option( 'post_by_email_options' );
 
 		$options['mailserver_url'] = trim( $input['mailserver_url'] );
@@ -78,10 +78,6 @@ class Post_By_Email_Admin {
 			$options['default_email_category'] = '';
 		}
 
-		// TODO this is a hack because validate is getting called
-		// when i call update_option from clear_log.  need to figure out why.
-		$options['log'] = $input['log'];
-
 		return $options;
 	}
 
@@ -98,6 +94,11 @@ class Post_By_Email_Admin {
 			'post-by-email',
 			array( $this, 'display_plugin_admin_page' )
 		);
+		WP_Screen::get($this->plugin_screen_hook_suffix)->add_help_tab( array(
+			'id'      => 'options-postemail',
+			'title'   => __( 'Post Via Email' ),
+			'content' => '<p>' . __( 'Post via email settings allow you to send your WordPress install an email with the content of your post. You must set up a secret e-mail account with POP3 access to use this, and any mail received at this address will be posted, so it&#8217;s a good idea to keep this address very secret.' ) . '</p>',
+		) );
 	}
 
 	/**
@@ -115,11 +116,9 @@ class Post_By_Email_Admin {
 	 * @since    0.9.9
 	*/
 	public function clear_log() {
-		// TODO: check_ajax_referer()
+		check_ajax_referer( 'post-by-email-clear-log', 'security' );
 		if( current_user_can( 'manage_options' ) ) {
-			$options = get_option( 'post_by_email_options' );
-			$options['log'] = array();
-			update_option( 'post_by_email_options', $options );
+			delete_option( 'post_by_email_log' );
 		}
 
 		die();

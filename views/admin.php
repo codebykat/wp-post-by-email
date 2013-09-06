@@ -1,9 +1,8 @@
 <?php
 /**
- * Represents the view for the administration dashboard.
+ * The view for the administration dashboard.
  *
- * This includes the header, options, and other information that should provide
- * The User Interface to the end user.
+ * This includes the options, log messages, and button to check for new mail.
  *
  * @package   PostByEmail
  * @author    Kat Hagan <kat@codebykat.com>
@@ -96,6 +95,7 @@
 	<h3><?php _e( 'Activity Log', 'post-by-email' ) ?></h3>
 	<?php
 		$options = get_option( 'post_by_email_options' );
+		$log = get_option( 'post_by_email_log' );
 	?>
 	<p>
 		<?php _e( 'Last checked for new mail:', 'post-by-email' ) ?>
@@ -120,8 +120,7 @@
 			<?php _e( 'Check now', 'post-by-email' ) ?>
 		</a>
 	</p>
-
-	<?php if( isset( $options['log'] ) && $options['log'] != array() ) : ?>
+	<?php if( $log && sizeof($log) > 0 ) : ?>
 
 		<p>
 			<a href="" id="clearLog" ><?php _e('Clear Log', 'post-by-email' ); ?></a>
@@ -130,7 +129,8 @@
 			jQuery('a#clearLog').click(function(e) {
 
 				var data = {
-					action: 'post_by_email_clear_log'
+					action: 'post_by_email_clear_log',
+					security: '<?php echo wp_create_nonce("post-by-email-clear-log"); ?>'
 				};
 
 				jQuery.post(ajaxurl, data, function(response) {
@@ -152,7 +152,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<?php foreach( ($options['log']) as $entry ) : ?>
+				<?php foreach( $log as $entry ) : ?>
 					<tr class="alternate">
 						<td><?php echo date_i18n( "$date_format, $time_format", $entry['timestamp'] ); ?></td>
 						<td><?php echo $entry['message']; ?></td>

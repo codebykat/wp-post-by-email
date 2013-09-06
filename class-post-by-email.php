@@ -418,20 +418,15 @@ class Post_By_Email {
 	 * @since    0.9.9
 	 *
 	 * @param    string    $error    Error message to save to the log.
-	 * @param    array     $log      The log file to save back to the plugin options.
 	 */
 	protected function save_log_message( $message ) {
-		$options = get_option( 'post_by_email_options' );
-
-		$log = array();
-		if( isset( $options['log'] ) ) {
-			$log = $options['log'];
-		}
+		$log = get_option( 'post_by_email_log', array() );
 
 		array_unshift( $log, array( 'timestamp'=>current_time( 'timestamp' ), 'message'=>$message ) );
 
-		$options['log'] = $log;
-		update_option( 'post_by_email_options', $options );
+		if( ! add_option( 'post_by_email_log', $log, '', 'no' ) ) {
+			update_option( 'post_by_email_log', $log );
+		}
 	}
 
 	/**

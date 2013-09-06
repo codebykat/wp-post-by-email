@@ -14,11 +14,9 @@ Create new posts on your WordPress blog by sending email to a specific email add
 
 Any new messages sent to the configured email address will be posted to the blog.  This plugin replaces the functionality that used to live in core.
 
-The "From" address is matched to WordPress users in the database to determine the post's author.  If the author is a non-admin or doesn't have an account, the post status will be set to "pending".
+The "From" address is matched to WordPress users in the database to determine the post's author.  If the author doesn't have an account or isn't allowed to publish posts, the post status will be set to "pending".
 
-Once an email has been successfully posted to the blog, it will be deleted from the mailbox.
-
-This plugin currently supports only unsecured (i.e., non-SSL) POP3 mail accounts, which means it *will not work* with most common webmail hosts such as Gmail.
+Once an email has been successfully posted to the blog, it will either be marked as read (IMAP servers only) or deleted from the mailbox.
 
 Updates on the project can be found on the [Make WordPress Core blog](http://make.wordpress.org/core/tag/post-by-email/).
 
@@ -40,6 +38,13 @@ To run the tests:
 1. From the plugin directory, run `WP_TESTS_DIR=/path/to/WordPress/test/install phpunit`
 
 ## Changelog ##
+
+### 1.0.0 ###
+* Added SSL and IMAP support.
+* Added option to mark emails "read" instead of deleting them after processing.
+* Added support for HTML formatted emails.
+* Refactored check_email function.
+* Fixed a bug that caused the log file to behave inconsistently.
 
 ### 0.9.9 ###
 * Better logging, no more wp_die().

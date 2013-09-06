@@ -298,7 +298,7 @@ class Horde_Mime
                 $out .= Horde_String::convertCharset(
                     preg_replace_callback(
                         '/=([0-9a-f]{2})/i',
-                        'preg_replace_callback_fn',
+                        array('Horde_Mime', 'preg_replace_callback_fn'),
                         str_replace('_', ' ', $encoded_text)),
                     $orig_charset,
                     'UTF-8'
@@ -708,7 +708,7 @@ class Horde_Mime
         return rtrim($decoded, "\0");
     }
 
-    protected function preg_replace_callback_fn($ord) {
+    static protected function preg_replace_callback_fn($ord) {
         return chr(hexdec($ord[1]));
     }
 }

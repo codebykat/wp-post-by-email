@@ -39,6 +39,10 @@ class Post_By_Email_Admin {
 
 		// AJAX hook to clear the log
 		add_action( 'wp_ajax_post_by_email_clear_log', array( $this, 'clear_log') );
+
+		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+	
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 	}
 
 	/**
@@ -57,29 +61,54 @@ class Post_By_Email_Admin {
 	 *
 	 * @param   array    $input    Form fields submitted from the settings page.
 	 */
-	public function post_by_email_validate($input) {
+	public function post_by_email_validate( $input ) {
 		// load all the options so we don't wipe out pre-existing stuff
 		$options = get_option( 'post_by_email_options' );
 
-		$options['mailserver_url'] = trim( $input['mailserver_url'] );
+		$default_options = Post_By_Email::$default_options;
 
-		// port must be numeric and 16 digits max
-		$options['mailserver_port'] = trim( $input['mailserver_port'] );
-		if( ! preg_match('/^[1-9][0-9]{0,15}$/', $options['mailserver_port'] ) ) {
-			$options['mailserver_port'] = '';
+		$mailserver_url = trim( $input['mailserver_url'] );
+		if( $mailserver_url != $default_options['mailserver_url'] ) {
+			$options['mailserver_url'] = $mailserver_url;
 		}
 
-		$options['mailserver_login'] = trim( $input['mailserver_login'] );
-		$options['mailserver_pass'] = trim( $input['mailserver_pass'] );
+		$mailserver_protocol = trim( $input['mailserver_protocol'] );
+		if( in_array( $options['mailserver_protocol'], array('POP3', 'IMAP') ) ) {
+			$options['mailserver_protocol'] = $mailserver_protocol;
+		}
+ 
+		// port must be numeric and 16 digits max
+		$mailserver_port = trim( $input['mailserver_port'] );
+		if( preg_match('/^[1-9][0-9]{0,15}$/', $mailserver_port ) ) {
+			$options['mailserver_port'] = $mailserver_port;
+		}
+
+		$mailserver_login = trim( $input['mailserver_login'] );
+		if( $mailserver_login != $default_options['mailserver_login'] ) {
+			$options['mailserver_login'] = $mailserver_login;
+		}
+
+		$mailserver_pass = trim( $input['mailserver_pass'] );
+		if( '' != $mailserver_pass ) {
+			$options['mailserver_pass'] = $mailserver_pass;
+		}
 
 		// default email category must be the ID of a real category
-		$options['default_email_category'] = $input['default_email_category'];
-		if( ! get_category( $options['default_email_category'] ) ) {
-			$options['default_email_category'] = '';
+		$default_email_category = $input['default_email_category'];
+		if( get_category( $default_email_category ) ) {
+			$options['default_email_category'] = $default_email_category;
 		}
 
 		$options['ssl'] = isset( $input['ssl'] );
 		$options['delete_messages'] = isset( $input['delete_messages'] );
+
+		if( $options['mailserver_url'] && $options['mailserver_port']
+			&& $options['mailserver_login'] && $options['mailserver_pass'] ) {
+			$options['status'] = 'ready';
+
+			// clear the transient if options have been updated
+			delete_transient( 'mailserver_last_checked' );
+		}
 
 		return $options;
 	}
@@ -111,6 +140,40 @@ class Post_By_Email_Admin {
 	 */
 	public function display_plugin_admin_page() {
 		include_once( plugin_dir_path( __FILE__ ) . 'views/admin.php' );
+	}
+
+	/**
+	* Load up Javascript for the admin page.
+	*
+	* @since    1.0.1
+	*
+	* @param    string    $hook    Name of the current admin page.
+	*/
+	public function enqueue_scripts( $hook ) {
+		if( $hook != $this->plugin_screen_hook_suffix )
+			return;
+
+		wp_enqueue_script( 'post-by-email-admin-js', plugins_url( 'js/admin.js', __FILE__ ), 'jquery', '', true );
+	}
+
+	/**
+	* Display any errors or notices as an admin banner.
+	*
+	* @since    1.0.1
+	*/
+	public function admin_notices() {
+		$options = get_option( 'post_by_email_options' );
+		$settings_url = admin_url( 'tools.php?page=post-by-email' );
+		if( ! $options || ! isset( $options['status'] ) || $options['status'] == 'unconfigured' ) {
+			echo "<div class='error'><p>";
+			_e( "Notice: Post by Email is currently disabled.  To post to your blog via email, please <a href='$settings_url'>configure your settings now</a>.", 'post-by-email' );
+			echo "</p></div>";
+		}
+		elseif( $options['status'] == 'error' ) {
+			echo "<div class='error'><p>";
+			_e( "Post via Email encountered an error.  Please double-check <a href='$settings_url'>the settings</a>.", 'post-by-email' );
+			echo "</p></div>";
+		}
 	}
 
 	/**

@@ -63,14 +63,16 @@ class Post_By_Email {
 	 *
 	 * @var      array
 	 */
-	protected static $default_options = array(
+	public static $default_options = array(
 		'mailserver_url'			=> 'mail.example.com',
 		'mailserver_login'			=> 'login@example.com',
-		'mailserver_pass'			=> 'password',
+		'mailserver_pass'			=> '',
+		'mailserver_protocol'		=> 'IMAP',
 		'mailserver_port'			=> 993,
 		'ssl'						=> true,
 		'default_email_category'	=> '',
-		'delete_messages'			=> false
+		'delete_messages'			=> true,
+		'status'					=> 'unconfigured'
 	);
 
 	/**
@@ -81,6 +83,15 @@ class Post_By_Email {
 	* @var      object
 	*/
 	protected $connection;
+
+	/**
+	* Connection protocol (POP3 or IMAP).
+	*
+	* @since    1.0.1
+	*
+	* @var      string
+	*/
+	protected $protocol;
 
 	/**
 	 * Initialize the plugin by setting localization, filters, and administration functions.
@@ -139,6 +150,17 @@ class Post_By_Email {
 			}
 		}
 
+		if( ! isset( $plugin_options['mailserver_protocol'] )
+			&& in_array( $options['mailserver_port'], array( 110, 995 ) ) ) {
+			$options['mailserver_protocol'] = 'POP3';
+			$options['delete_messages'] = false;
+		}
+
+		if( ! isset( $plugin_options['ssl'] )
+			&& in_array( $options['mailserver_port'], array( 110, 143 ) ) ) {
+			$options['ssl'] = false;
+		}
+
 		update_option( 'post_by_email_options', $options );
 
 		// if log already exists, this will return false, and that is okay
@@ -184,7 +206,7 @@ class Post_By_Email {
 
 		$this->check_email();
 
-		wp_safe_redirect( admin_url( 'tools.php?page=post-by-email' ) );
+		wp_safe_redirect( admin_url( 'tools.php?page=post-by-email&tab=log' ) );
 	}
 
 	/**
@@ -194,16 +216,12 @@ class Post_By_Email {
 	 */
 	public function check_email() {
 		// Only check at this interval for new messages.
-		if ( ! defined( 'WP_MAIL_INTERVAL' ) )
+		if( ! defined( 'WP_MAIL_INTERVAL' ) )
 			define( 'WP_MAIL_INTERVAL', 5 * MINUTE_IN_SECONDS );
 
 		$last_checked = get_transient( 'mailserver_last_checked' );
 
-		$options = get_option( 'post_by_email_options' );
-		$options['last_checked'] = current_time( 'timestamp' );
-		update_option( 'post_by_email_options', $options );
-
-		if ( $last_checked && ! WP_DEBUG ) {
+		if( $last_checked && ! WP_DEBUG ) {
 			$log_message = __( 'Slow down cowboy, no need to check for new mails so often!', 'post-by-email' );
 			$this->save_log_message( $log_message );
 			return;
@@ -211,13 +229,13 @@ class Post_By_Email {
 
 		set_transient( 'mailserver_last_checked', true, WP_MAIL_INTERVAL );
 
+		$options = get_option( 'post_by_email_options' );
+		$options['last_checked'] = current_time( 'timestamp' );
+		update_option( 'post_by_email_options', $options );
+
 		// if options aren't set, there's nothing to do, move along
-		foreach( array( 'mailserver_url', 'mailserver_login', 'mailserver_pass' ) as $optname ) {
-			if( ! $options[$optname] || $options[$optname] == self::$default_options[$optname] ) {
-				$log_message = __( 'Options not set; skipping.', 'post-by-email' );
-				$this->save_log_message( $log_message );
-				return;
-			}
+		if( $options['status'] == 'unconfigured' ) {
+			return;
 		}
 
 		$this->connection = $this->open_mailbox_connection( $options );
@@ -349,12 +367,13 @@ class Post_By_Email {
 										'secure' => $options['ssl'] ? 'ssl' : false
 									);
 
-		if( in_array( $options['mailserver_port'], array( 143, 993 ) ) ) {  // IMAP
-			$connection = new Horde_Imap_Client_Socket( $connection_options );
-
-		}
-		else {  // POP3
+		if( 'POP3' == $options['mailserver_protocol'] ) {
 			$connection = new Horde_Imap_Client_Socket_Pop3( $connection_options );
+			$this->protocol = 'POP3';
+		}
+		else {  // IMAP
+			$connection = new Horde_Imap_Client_Socket( $connection_options );
+			$this->protocol = 'IMAP';
 		}
 		$connection->_setInit( 'authmethod', 'USER' );
 
@@ -382,7 +401,7 @@ class Post_By_Email {
 
 		try {
 			// POP3 doesn't understand about read/unread messages
-			if( 'Horde_Imap_Client_Socket_Pop3' == get_class( $this->connection ) ) {
+			if( 'POP3' == $this->protocol ) {
 				$test = $this->connection->search( 'INBOX' );
 			}
 			else {
@@ -551,7 +570,7 @@ class Post_By_Email {
 			return;
 
 		$flag = Horde_Imap_Client::FLAG_SEEN;
-		if( $delete )
+		if( $delete || ( 'POP3' == $this->protocol ) )
 			$flag = Horde_Imap_Client::FLAG_DELETED;
 
 		try {

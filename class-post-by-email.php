@@ -285,7 +285,7 @@ class Post_By_Email {
 			}
 			else {
 				// use admin if no author found
-				$post_author = 1;
+				$post_author = 0;
 				$post_status = 'pending';
 			}
 

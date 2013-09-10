@@ -24,7 +24,7 @@ class Post_By_Email {
 	 *
 	 * @var     string
 	 */
-	protected $version = '1.0.0';
+	protected $version = '1.0.1';
 
 	/**
 	 * Unique identifier for the plugin.
@@ -231,6 +231,7 @@ class Post_By_Email {
 
 		$options = get_option( 'post_by_email_options' );
 		$options['last_checked'] = current_time( 'timestamp' );
+		$options['status'] = '';
 		update_option( 'post_by_email_options', $options );
 
 		// if options aren't set, there's nothing to do, move along
@@ -327,7 +328,7 @@ class Post_By_Email {
 			$post_ID = wp_insert_post( $post_data );
 			if ( is_wp_error( $post_ID ) ) {
 				$log_message .= "\n" . $post_ID->get_error_message();
-				$this->save_log_message( $log_message );
+				$this->save_error_message( $log_message );
 			}
 
 			// We couldn't post, for whatever reason. Better move forward to the next email.
@@ -336,9 +337,16 @@ class Post_By_Email {
 
 			do_action( 'publish_phone', $post_ID );
 
-			// $log_message .= "\n<p>" . sprintf( __( 'Author: %s', 'post-by-email' ), esc_html( $post_author ) ) . '</p>';
-			// $log_message .= "\n<p>" . sprintf( __( 'Posted title: %s', 'post-by-email' ), esc_html( $post_title ) ) . '</p>';
-			$log_message .= "<br />" . __( 'Posted:', 'post-by-email') . ' <a href="' . get_permalink( $post_ID ) . '">' . esc_html( $post_title ) . '</a>';
+			if( '' == $post_title ) {
+				$post_title = __( '(no title)', 'post-by-email' );
+			}
+
+			$pending = '';
+			if( 'pending' == $post_status ) {
+				$pending = __( ' (pending)', 'post-by-email' );
+			}
+
+			$log_message .= "<br />" . __( 'Posted:', 'post-by-email') . ' <a href="' . get_permalink( $post_ID ) . '">' . esc_html( $post_title ) . '</a>' . $pending;
 
 		} // end foreach
 
@@ -381,7 +389,7 @@ class Post_By_Email {
 			$connection->login();
 		}
 		catch( Horde_Imap_Client_Exception $e ) {
-			$this->save_log_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
+			$this->save_error_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
 			return false;
 		}
 
@@ -412,7 +420,7 @@ class Post_By_Email {
 			$uids = $test['match'];
 		}
 		catch( Horde_Imap_Client_Exception $e ) {
-			$this->save_log_message( __( 'An error occurred: ', 'post-by-email' ) . $e->getMessage() );
+			$this->save_error_message( __( 'An error occurred: ', 'post-by-email' ) . $e->getMessage() );
 			return false;
 		}
 		return $uids;
@@ -580,8 +588,19 @@ class Post_By_Email {
 			) );
 		}
 		catch ( Horde_Imap_Client_Exception $e ) {
-			$this->save_log_message( __( 'An error occurred: ', 'post-by-email' ) . $e->getMessage() );
+			$this->save_error_message( __( 'An error occurred: ', 'post-by-email' ) . $e->getMessage() );
 		}
+	}
+
+	/**
+	 * Save an error message to the log file.
+	 *
+	 * @since    0.9.9
+	 *
+	 * @param    string    $message    Error to save to the log.
+	 */
+	protected function save_error_message( $message ) {
+		$this->save_log_message( $message, true );
 	}
 
 	/**
@@ -589,14 +608,20 @@ class Post_By_Email {
 	 *
 	 * @since    0.9.9
 	 *
-	 * @param    string    $message    Error message to save to the log.
+	 * @param    string    $message    Message to save to the log.
 	 */
-	protected function save_log_message( $message ) {
+	protected function save_log_message( $message, $error=false ) {
 		$log = get_option( 'post_by_email_log', array() );
 
 		array_unshift( $log, array( 'timestamp'=>current_time( 'timestamp' ), 'message'=>$message ) );
 
 		update_option( 'post_by_email_log', $log );
+
+		if( $error ) {
+			$options = get_option( 'post_by_email_options' );
+			$options['status'] = 'error';
+			update_option( 'post_by_email_options', $options );
+		}
 	}
 
 	/**

@@ -104,10 +104,10 @@ class Post_By_Email_Admin {
 
 		if( $options['mailserver_url'] && $options['mailserver_port']
 			&& $options['mailserver_login'] && $options['mailserver_pass'] ) {
-			$options['status'] = 'ready';
 
-			// clear the transient if options have been updated
+			// clear the transient and any error conditions if options have been updated
 			delete_transient( 'mailserver_last_checked' );
+			$options['status'] = '';
 		}
 
 		return $options;
@@ -166,12 +166,12 @@ class Post_By_Email_Admin {
 		$settings_url = admin_url( 'tools.php?page=post-by-email' );
 		if( ! $options || ! isset( $options['status'] ) || $options['status'] == 'unconfigured' ) {
 			echo "<div class='error'><p>";
-			_e( "Notice: Post by Email is currently disabled.  To post to your blog via email, please <a href='$settings_url'>configure your settings now</a>.", 'post-by-email' );
+			_e( "Notice: Post By Email is currently disabled.  To post to your blog via email, please <a href='$settings_url'>configure your settings now</a>.", 'post-by-email' );
 			echo "</p></div>";
 		}
 		elseif( $options['status'] == 'error' ) {
 			echo "<div class='error'><p>";
-			_e( "Post via Email encountered an error.  Please double-check <a href='$settings_url'>the settings</a>.", 'post-by-email' );
+			_e( "Post By Email encountered an error.  <a href='$settings_url&tab=log'>View the log</a> for details.", 'post-by-email' );
 			echo "</p></div>";
 		}
 	}

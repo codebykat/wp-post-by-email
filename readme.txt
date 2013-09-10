@@ -39,6 +39,11 @@ To run the tests:
 
 == Changelog ==
 
+= 1.0.1 =
+* Added tabs and additional options to options panel.
+* Admin banners for notices & errors.
+* Plugin is now disabled until user has configured the settings.
+
 = 1.0.0 =
 * Added SSL and IMAP support.
 * Added option to mark emails "read" instead of deleting them after processing.

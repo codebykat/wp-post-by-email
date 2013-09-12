@@ -132,7 +132,7 @@ class Post_By_Email {
 	 *
 	 * @since    0.9.0
 	 *
-	 * @param    boolean    $network_wide    True if WPMU superadmin uses "Network Activate" action, false if WPMU is disabled or plugin is activated on an individual blog.
+	 * @param    boolean    $network_wide    True if multisite superadmin uses "Network Activate" action, false if multisite is disabled or plugin is activated on an individual blog.
 	 */
 	public static function activate( $network_wide ) {
 		// set up plugin options
@@ -234,7 +234,7 @@ class Post_By_Email {
 		update_option( 'post_by_email_options', $options );
 
 		// if options aren't set, there's nothing to do, move along
-		if ( $options['status'] == 'unconfigured' ) {
+		if ( 'unconfigured' == $options['status'] ) {
 			return;
 		}
 
@@ -359,7 +359,7 @@ class Post_By_Email {
 	/**
 	 * Returns the site administrator's ID (used to set the author of posts sent from unrecognized email addresses).
 	 *
-	 * @since    1.0.2
+	 * @since    1.0.1
 	 *
 	 * @return   integer    $id
 	 */

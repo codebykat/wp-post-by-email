@@ -129,7 +129,7 @@ class Post_By_Email_Admin {
 		WP_Screen::get($this->plugin_screen_hook_suffix)->add_help_tab( array(
 			'id'      => 'options-postemail',
 			'title'   => __( 'Post Via Email' ),
-			'content' => '<p>' . __( 'Post via email settings allow you to send your WordPress install an email with the content of your post. You must set up a secret e-mail account with POP3 access to use this, and any mail received at this address will be posted, so it&#8217;s a good idea to keep this address very secret.' ) . '</p>',
+			'content' => '<p>' . __( 'Post via email settings allow you to send your WordPress install an email with the content of your post. You must set up a secret e-mail account with POP3 access to use this, and any mail received at this address will be posted, so it&#8217;s a good idea to keep this address very secret.', 'post-by-email' ) . '</p>',
 		) );
 	}
 
@@ -164,11 +164,11 @@ class Post_By_Email_Admin {
 	public function admin_notices() {
 		$options = get_option( 'post_by_email_options' );
 		$settings_url = admin_url( 'tools.php?page=post-by-email' );
-		if ( ! $options || ! isset( $options['status'] ) || $options['status'] == 'unconfigured' ) {
+		if ( ! $options || ! isset( $options['status'] ) || 'unconfigured' == $options['status'] ) {
 			echo "<div class='error'><p>";
 			_e( "Notice: Post By Email is currently disabled.  To post to your blog via email, please <a href='$settings_url'>configure your settings now</a>.", 'post-by-email' );
 			echo "</p></div>";
-		} elseif ( $options['status'] == 'error' ) {
+		} elseif ( 'error' == $options['status'] ) {
 			echo "<div class='error'><p>";
 			_e( "Post By Email encountered an error.  <a href='$settings_url&tab=log'>View the log</a> for details.", 'post-by-email' );
 			echo "</p></div>";

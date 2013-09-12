@@ -64,15 +64,15 @@ class Post_By_Email {
 	 * @var      array
 	 */
 	public static $default_options = array(
-		'mailserver_url'			=> 'mail.example.com',
-		'mailserver_login'			=> 'login@example.com',
-		'mailserver_pass'			=> '',
-		'mailserver_protocol'		=> 'IMAP',
-		'mailserver_port'			=> 993,
-		'ssl'						=> true,
-		'default_email_category'	=> '',
-		'delete_messages'			=> true,
-		'status'					=> 'unconfigured'
+		'mailserver_url'            => 'mail.example.com',
+		'mailserver_login'          => 'login@example.com',
+		'mailserver_pass'           => '',
+		'mailserver_protocol'       => 'IMAP',
+		'mailserver_port'           => 993,
+		'ssl'                       => true,
+		'default_email_category'    => '',
+		'delete_messages'           => true,
+		'status'                    => 'unconfigured',
 	);
 
 	/**
@@ -141,22 +141,21 @@ class Post_By_Email {
 		$options = self::$default_options;
 
 		// if old global options exist, copy them into plugin options
-		foreach( array_keys( self::$default_options ) as $optname ) {
-			if( isset( $plugin_options[$optname] ) ) {
+		foreach ( array_keys( self::$default_options ) as $optname ) {
+			if ( isset( $plugin_options[$optname] ) ) {
 				$options[$optname] = $plugin_options[$optname];
-			}
-			elseif ( get_option( $optname ) ) {
+			} elseif ( get_option( $optname ) ) {
 				$options[ $optname ] = get_option( $optname );
 			}
 		}
 
-		if( ! isset( $plugin_options['mailserver_protocol'] )
+		if ( ! isset( $plugin_options['mailserver_protocol'] )
 			&& in_array( $options['mailserver_port'], array( 110, 995 ) ) ) {
 			$options['mailserver_protocol'] = 'POP3';
 			$options['delete_messages'] = false;
 		}
 
-		if( ! isset( $plugin_options['ssl'] )
+		if ( ! isset( $plugin_options['ssl'] )
 			&& in_array( $options['mailserver_port'], array( 110, 143 ) ) ) {
 			$options['ssl'] = false;
 		}
@@ -167,7 +166,7 @@ class Post_By_Email {
 		add_option( 'post_by_email_log', array(), '', 'no' );
 
 		// schedule hourly mail checks with wp_cron
-		if( ! wp_next_scheduled( 'post-by-email-wp-mail.php' ) ) {
+		if ( ! wp_next_scheduled( 'post-by-email-wp-mail.php' ) ) {
 			wp_schedule_event( current_time( 'timestamp', 1 ), 'hourly', 'post-by-email-wp-mail.php' );
 		}
 	}
@@ -216,12 +215,12 @@ class Post_By_Email {
 	 */
 	public function check_email() {
 		// Only check at this interval for new messages.
-		if( ! defined( 'WP_MAIL_INTERVAL' ) )
+		if ( ! defined( 'WP_MAIL_INTERVAL' ) )
 			define( 'WP_MAIL_INTERVAL', 5 * MINUTE_IN_SECONDS );
 
 		$last_checked = get_transient( 'mailserver_last_checked' );
 
-		if( $last_checked && ! WP_DEBUG ) {
+		if ( $last_checked && ! WP_DEBUG ) {
 			$log_message = __( 'Slow down cowboy, no need to check for new mails so often!', 'post-by-email' );
 			$this->save_log_message( $log_message );
 			return;
@@ -235,19 +234,19 @@ class Post_By_Email {
 		update_option( 'post_by_email_options', $options );
 
 		// if options aren't set, there's nothing to do, move along
-		if( $options['status'] == 'unconfigured' ) {
+		if ( $options['status'] == 'unconfigured' ) {
 			return;
 		}
 
 		$this->connection = $this->open_mailbox_connection( $options );
 
-		if(! $this->connection ) {
+		if (! $this->connection ) {
 			return;
 		}
 
 		$uids = $this->get_messages();
 
-		if( 0 === sizeof( $uids ) ) {
+		if ( 0 === sizeof( $uids ) ) {
 			$this->save_log_message( __( 'There doesn&#8217;t seem to be any new mail.', 'post-by-email' ) );
 			$this->connection->shutdown();
 			return;
@@ -258,7 +257,7 @@ class Post_By_Email {
 		$time_difference = get_option( 'gmt_offset' ) * HOUR_IN_SECONDS;
 		$phone_delim = '::';
 
-		foreach( $uids as $id ) {
+		foreach ( $uids as $id ) {
 			$uid = new Horde_Imap_Client_Ids( $id );
 
 			// get headers
@@ -282,10 +281,9 @@ class Post_By_Email {
 				// Set $post_status based on author's publish_posts capability
 				$user = new WP_User( $post_author );
 				$post_status = ( $user->has_cap( 'publish_posts' ) ) ? 'publish' : 'pending';
-			}
-			else {
+			} else {
 				// use admin if no author found
-				$post_author = 1;
+				$post_author = $this->get_admin_id();
 				$post_status = 'pending';
 			}
 
@@ -337,12 +335,12 @@ class Post_By_Email {
 
 			do_action( 'publish_phone', $post_ID );
 
-			if( '' == $post_title ) {
+			if ( '' == $post_title ) {
 				$post_title = __( '(no title)', 'post-by-email' );
 			}
 
 			$pending = '';
-			if( 'pending' == $post_status ) {
+			if ( 'pending' == $post_status ) {
 				$pending = __( ' (pending)', 'post-by-email' );
 			}
 
@@ -359,6 +357,20 @@ class Post_By_Email {
 	}
 
 	/**
+	 * Returns the site administrator's ID (used to set the author of posts sent from unrecognized email addresses).
+	 *
+	 * @since    1.0.2
+	 *
+	 * @return   integer    $id
+	 */
+	protected function get_admin_id() {
+		global $wpdb;
+
+		$id = $wpdb->get_var( "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key='wp_capabilities' AND meta_value LIKE '%administrator%' ORDER BY user_id LIMIT 1" );
+		return $id;
+	}
+
+	/**
 	 * Establishes the connection to the mailserver.
 	 *
 	 * @since    1.0.0
@@ -368,18 +380,18 @@ class Post_By_Email {
 	 * @return   object
 	 */
 	protected function open_mailbox_connection( $options ) {
-		$connection_options = array( 'username' => $options['mailserver_login'],
-										'password' => $options['mailserver_pass'],
-										'hostspec' => $options['mailserver_url'],
-										'port' => $options['mailserver_port'],
-										'secure' => $options['ssl'] ? 'ssl' : false
-									);
+		$connection_options = array(
+			'username' => $options['mailserver_login'],
+			'password' => $options['mailserver_pass'],
+			'hostspec' => $options['mailserver_url'],
+			'port' => $options['mailserver_port'],
+			'secure' => $options['ssl'] ? 'ssl' : false,
+		);
 
-		if( 'POP3' == $options['mailserver_protocol'] ) {
+		if ( 'POP3' == $options['mailserver_protocol'] ) {
 			$connection = new Horde_Imap_Client_Socket_Pop3( $connection_options );
 			$this->protocol = 'POP3';
-		}
-		else {  // IMAP
+		} else {  // IMAP
 			$connection = new Horde_Imap_Client_Socket( $connection_options );
 			$this->protocol = 'IMAP';
 		}
@@ -404,15 +416,14 @@ class Post_By_Email {
 	 * @return   array    Array of message UIDs
 	 */
 	protected function get_messages() {
-		if( ! $this->connection )
+		if ( ! $this->connection )
 			return;
 
 		try {
 			// POP3 doesn't understand about read/unread messages
-			if( 'POP3' == $this->protocol ) {
+			if ( 'POP3' == $this->protocol ) {
 				$test = $this->connection->search( 'INBOX' );
-			}
-			else {
+			} else {
 				$search_query = new Horde_Imap_Client_Search_Query();
 				$search_query->flag( Horde_Imap_Client::FLAG_SEEN, false );
 				$test = $this->connection->search( 'INBOX', $search_query );
@@ -536,7 +547,7 @@ class Post_By_Email {
 
 		$part = $list->first()->getStructure();
 		$body_id = $part->findBody('html');
-		if( is_null( $body_id ) ) {
+		if ( is_null( $body_id ) ) {
 			$body_id = $part->findBody();
 		}
 		$body = $part->getPart( $body_id );
@@ -574,11 +585,11 @@ class Post_By_Email {
 	 * @param    bool     $delete    Whether to delete read messages
 	 */
 	protected function mark_as_read( $uids, $delete=false ) {
-		if( ! $this->connection )
+		if ( ! $this->connection )
 			return;
 
 		$flag = Horde_Imap_Client::FLAG_SEEN;
-		if( $delete || ( 'POP3' == $this->protocol ) )
+		if ( $delete || ( 'POP3' == $this->protocol ) )
 			$flag = Horde_Imap_Client::FLAG_DELETED;
 
 		try {
@@ -617,7 +628,7 @@ class Post_By_Email {
 
 		update_option( 'post_by_email_log', $log );
 
-		if( $error ) {
+		if ( $error ) {
 			$options = get_option( 'post_by_email_options' );
 			$options['status'] = 'error';
 			update_option( 'post_by_email_options', $options );
@@ -643,7 +654,7 @@ class Post_By_Email {
 	 */
 	public static function autoload( $class ) {
 		// We're only interested in autoloading Horde includes.
-		if( 0 !== strpos( $class, 'Horde' ) ) {
+		if ( 0 !== strpos( $class, 'Horde' ) ) {
 			return;
 		}
 
@@ -651,7 +662,7 @@ class Post_By_Email {
 		// ex: we expect the class Horde_Imap_Client to be defined in Horde/Imap/Client.php.
 		$filename = str_replace( array( '_', '\\' ), '/', $class );
 		$filename = self::$path . '/include/' . $filename . '.php';
-		if( file_exists( $filename ) ) {
+		if ( file_exists( $filename ) ) {
 			require_once( $filename );
 		}
 	}

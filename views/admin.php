@@ -16,7 +16,7 @@
 	<?php screen_icon(); ?>
 	<h2><?php echo esc_html( get_admin_page_title() ); ?></h2>
 
-	<?php if( isset( $_GET['settings-updated'] ) ) : ?>
+	<?php if ( isset( $_GET['settings-updated'] ) ) : ?>
 		<div class='updated'>
 			<p><?php _e( 'Your settings have been saved.', 'post-by-email' ); ?></p>
 		</div>
@@ -25,13 +25,13 @@
 	<?php $tab = isset( $_GET['tab'] ) ? $_GET['tab'] : 'main'; ?>
 
 	<h2 class="nav-tab-wrapper">
-		<a id="nav-main" href="<?php echo admin_url('tools.php?page='.$_GET['page']); ?>" class="nav-tab <?php if( 'main' == $tab ) { echo 'nav-tab-active'; } ?>">
+		<a id="nav-main" href="<?php echo admin_url('tools.php?page='.$_GET['page']); ?>" class="nav-tab <?php if ( 'main' == $tab ) { echo 'nav-tab-active'; } ?>">
 			<?php _e( 'Basic Settings', 'post-by-email' ); ?>
 		</a>
-		<a id="nav-connection" href="<?php echo admin_url('tools.php?page='.$_GET['page'].'&tab=connection'); ?>" class="nav-tab <?php if( 'connection' == $tab ) { echo 'nav-tab-active'; } ?>">
+		<a id="nav-connection" href="<?php echo admin_url('tools.php?page='.$_GET['page'].'&tab=connection'); ?>" class="nav-tab <?php if ( 'connection' == $tab ) { echo 'nav-tab-active'; } ?>">
 			<?php _e( 'Mailbox Details', 'post-by-email' ); ?>
 		</a>
-		<a id="nav-log" href="<?php echo admin_url('tools.php?page='.$_GET['page'].'&tab=log'); ?>" class="nav-tab <?php if( 'log' == $tab ) { echo 'nav-tab-active'; } ?>">
+		<a id="nav-log" href="<?php echo admin_url('tools.php?page='.$_GET['page'].'&tab=log'); ?>" class="nav-tab <?php if ( 'log' == $tab ) { echo 'nav-tab-active'; } ?>">
 			<?php _e( 'Activity Log', 'post-by-email' ); ?>
 		</a>
 	</h2>
@@ -41,7 +41,7 @@
 
 		<?php $options = get_option( 'post_by_email_options' ); ?>
 
-		<div class='tab-content' id='tab-main' <?php if( 'main' != $tab ) { echo 'style="display:none;"'; } ?>>
+		<div class='tab-content' id='tab-main' <?php if ( 'main' != $tab ) { echo 'style="display:none;"'; } ?>>
 			<p>
 				<?php
 					printf( __( 'To post to WordPress by e-mail you must set up a secret e-mail account
@@ -112,7 +112,7 @@
 			<?php submit_button(); ?>
 		</div>
 
-		<div class='tab-content' id='tab-connection' <?php if( 'connection' != $tab ) { echo 'style="display:none;"'; } ?>>
+		<div class='tab-content' id='tab-connection' <?php if ( 'connection' != $tab ) { echo 'style="display:none;"'; } ?>>
 
 			<p><?php _e( "Configure the details of your mailbox connection.  The default settings should work with most email accounts, but if your mail server differs, you can enter it here.", 'post-by-email' ); ?></p>
 
@@ -125,8 +125,8 @@
 					</th>
 					<td>
 						<select name="post_by_email_options[mailserver_protocol]" id="post_by_email_options[mailserver_protocol]">
-							<option value="POP3" <?php if( 'POP3' == $options['mailserver_protocol'] ) { echo 'selected'; } ?>>POP3</option>
-							<option value="IMAP" <?php if( 'IMAP' == $options['mailserver_protocol'] ) { echo 'selected'; } ?>>IMAP</option>
+							<option value="POP3" <?php selected( 'POP3', $options['mailserver_protocol'] ); ?>>POP3</option>
+							<option value="IMAP" <?php selected( 'IMAP', $options['mailserver_protocol'] ); ?>>IMAP</option>
 						</select>
 					</td>
 				</tr>
@@ -150,7 +150,7 @@
 						</label>
 					</th>
 					<td>
-						<input name="post_by_email_options[ssl]" id="post_by_email_options[ssl]" type="checkbox" id="ssl" <?php if( $options['ssl'] ) { echo 'checked="checked"'; } ?> />
+						<input name="post_by_email_options[ssl]" id="post_by_email_options[ssl]" type="checkbox" id="ssl" <?php checked( $options['ssl'] ); ?> />
 					</td>
 				</tr>
 				<tr valign="top">
@@ -160,19 +160,19 @@
 						</label>
 					</th>
 					<td>
-						<input name="post_by_email_options[delete_messages]" id="post_by_email_options[delete_messages]" type="checkbox" id="delete_messages" <?php if( $options['delete_messages'] ) { echo 'checked="checked"'; } ?> />
+						<input name="post_by_email_options[delete_messages]" id="post_by_email_options[delete_messages]" type="checkbox" id="delete_messages" <?php checked( $options['delete_messages'] ); ?> />
 						<p class="description"><?php _e( 'Uncheck this box to mark messages as read instead of deleting (requires IMAP).', 'post-by-email' ); ?></p>
 					</td>
 				</tr>
 			</table>
 
 			<br />
-			<input type="button" id="resetButton" class="button-secondary" value="<?php _e( 'Reset to Defaults', 'post-by-email'); ?>" />
+			<input type="button" id="resetButton" class="button-secondary" value="<?php esc_attr_e( 'Reset to Defaults', 'post-by-email'); ?>" />
 			<?php submit_button(); ?>
 		</div>
 	</form>
 
-	<div class='tab-content' id='tab-log' <?php if( 'log' != $tab ) { echo 'style="display:none;"'; } ?>>
+	<div class='tab-content' id='tab-log' <?php if ( 'log' != $tab ) { echo 'style="display:none;"'; } ?>>
 
 		<?php
 			$log = get_option( 'post_by_email_log' );
@@ -183,7 +183,7 @@
 				$date_format = get_option( 'date_format' );
 				$time_format = get_option( 'time_format' );
 			?>
-			<?php if( isset( $options['last_checked'] ) ) : ?>
+			<?php if ( isset( $options['last_checked'] ) ) : ?>
 				<?php echo date_i18n( "$date_format, $time_format", $options['last_checked'] ); ?>
 			<?php else: ?>
 				<?php _e( 'Never', 'post-by-email' ); ?>
@@ -200,7 +200,7 @@
 				<?php _e( 'Check now', 'post-by-email' ); ?>
 			</a>
 		</p>
-		<?php if( $log && sizeof($log) > 0 ) : ?>
+		<?php if ( $log && sizeof($log) > 0 ) : ?>
 
 			<p>
 				<a href="" id="clearLog" ><?php _e('Clear Log', 'post-by-email' ); ?></a>
@@ -213,7 +213,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach( $log as $entry ) : ?>
+					<?php foreach ( $log as $entry ) : ?>
 						<tr class="alternate">
 							<td><?php echo date_i18n( "$date_format, $time_format", $entry['timestamp'] ); ?></td>
 							<td><?php echo $entry['message']; ?></td>

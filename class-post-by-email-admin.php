@@ -68,41 +68,41 @@ class Post_By_Email_Admin {
 		$default_options = Post_By_Email::$default_options;
 
 		$mailserver_url = trim( $input['mailserver_url'] );
-		if( $mailserver_url != $default_options['mailserver_url'] ) {
+		if ( $mailserver_url != $default_options['mailserver_url'] ) {
 			$options['mailserver_url'] = $mailserver_url;
 		}
 
 		$mailserver_protocol = trim( $input['mailserver_protocol'] );
-		if( in_array( $options['mailserver_protocol'], array('POP3', 'IMAP') ) ) {
+		if ( in_array( $options['mailserver_protocol'], array( 'POP3', 'IMAP' ) ) ) {
 			$options['mailserver_protocol'] = $mailserver_protocol;
 		}
  
 		// port must be numeric and 16 digits max
 		$mailserver_port = trim( $input['mailserver_port'] );
-		if( preg_match('/^[1-9][0-9]{0,15}$/', $mailserver_port ) ) {
+		if ( preg_match('/^[1-9][0-9]{0,15}$/', $mailserver_port ) ) {
 			$options['mailserver_port'] = $mailserver_port;
 		}
 
 		$mailserver_login = trim( $input['mailserver_login'] );
-		if( $mailserver_login != $default_options['mailserver_login'] ) {
+		if ( $mailserver_login != $default_options['mailserver_login'] ) {
 			$options['mailserver_login'] = $mailserver_login;
 		}
 
 		$mailserver_pass = trim( $input['mailserver_pass'] );
-		if( '' != $mailserver_pass ) {
+		if ( '' != $mailserver_pass ) {
 			$options['mailserver_pass'] = $mailserver_pass;
 		}
 
 		// default email category must be the ID of a real category
 		$default_email_category = $input['default_email_category'];
-		if( get_category( $default_email_category ) ) {
+		if ( get_category( $default_email_category ) ) {
 			$options['default_email_category'] = $default_email_category;
 		}
 
 		$options['ssl'] = isset( $input['ssl'] );
 		$options['delete_messages'] = isset( $input['delete_messages'] );
 
-		if( $options['mailserver_url'] && $options['mailserver_port']
+		if ( $options['mailserver_url'] && $options['mailserver_port']
 			&& $options['mailserver_login'] && $options['mailserver_pass'] ) {
 
 			// clear the transient and any error conditions if options have been updated
@@ -150,7 +150,7 @@ class Post_By_Email_Admin {
 	* @param    string    $hook    Name of the current admin page.
 	*/
 	public function enqueue_scripts( $hook ) {
-		if( $hook != $this->plugin_screen_hook_suffix )
+		if ( $hook != $this->plugin_screen_hook_suffix )
 			return;
 
 		wp_enqueue_script( 'post-by-email-admin-js', plugins_url( 'js/admin.js', __FILE__ ), 'jquery', '', true );
@@ -164,12 +164,11 @@ class Post_By_Email_Admin {
 	public function admin_notices() {
 		$options = get_option( 'post_by_email_options' );
 		$settings_url = admin_url( 'tools.php?page=post-by-email' );
-		if( ! $options || ! isset( $options['status'] ) || $options['status'] == 'unconfigured' ) {
+		if ( ! $options || ! isset( $options['status'] ) || $options['status'] == 'unconfigured' ) {
 			echo "<div class='error'><p>";
 			_e( "Notice: Post By Email is currently disabled.  To post to your blog via email, please <a href='$settings_url'>configure your settings now</a>.", 'post-by-email' );
 			echo "</p></div>";
-		}
-		elseif( $options['status'] == 'error' ) {
+		} elseif ( $options['status'] == 'error' ) {
 			echo "<div class='error'><p>";
 			_e( "Post By Email encountered an error.  <a href='$settings_url&tab=log'>View the log</a> for details.", 'post-by-email' );
 			echo "</p></div>";
@@ -183,7 +182,7 @@ class Post_By_Email_Admin {
 	*/
 	public function clear_log() {
 		check_ajax_referer( 'post-by-email-clear-log', 'security' );
-		if( current_user_can( 'manage_options' ) ) {
+		if ( current_user_can( 'manage_options' ) ) {
 			update_option( 'post_by_email_log', array() );
 		}
 

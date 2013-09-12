@@ -42,7 +42,7 @@ require_once( plugin_dir_path( __FILE__ ) . 'class-post-by-email.php' );
 register_activation_hook( __FILE__, array( 'Post_By_Email', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'Post_By_Email', 'deactivate' ) );
 
-if( is_admin() ) {
+if ( is_admin() ) {
     require_once( plugin_dir_path( __FILE__ ) . 'class-post-by-email-admin.php' );
     Post_By_Email_Admin::get_instance();
 }

@@ -40,6 +40,8 @@ class Post_By_Email_Admin {
 		// AJAX hook to clear the log
 		add_action( 'wp_ajax_post_by_email_clear_log', array( $this, 'clear_log') );
 
+		add_action( 'wp_ajax_post_by_email_generate_pin', array( $this, 'generate_pin') );
+
 		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 	
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
@@ -109,6 +111,9 @@ class Post_By_Email_Admin {
 			delete_transient( 'mailserver_last_checked' );
 			$options['status'] = '';
 		}
+
+		$options['pin_required'] = isset( $input['pin_required'] );
+		$options['pin'] = trim( $input['pin'] );
 
 		return $options;
 	}
@@ -184,6 +189,20 @@ class Post_By_Email_Admin {
 		check_ajax_referer( 'post-by-email-clear-log', 'security' );
 		if ( current_user_can( 'manage_options' ) ) {
 			update_option( 'post_by_email_log', array() );
+		}
+
+		die();
+	}
+
+	/**
+	 * Generate a good PIN.
+	 *
+	 * @since    1.0.2
+	*/
+	public function generate_pin() {
+		check_ajax_referer( 'post-by-email-generate-pin', 'security' );
+		if ( current_user_can( 'manage_options' ) ) {
+			echo wp_generate_password( 8, true, false );
 		}
 
 		die();

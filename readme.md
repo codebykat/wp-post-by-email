@@ -46,6 +46,7 @@ To run the tests:
 
 ### 1.0.2 ###
 * Support shortcodes to specify categories and tags.
+* Added PIN-based authentication.
 
 ### 1.0.1 ###
 * Added tabs and additional options to options panel.

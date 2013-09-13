@@ -31,6 +31,9 @@
 		<a id="nav-connection" href="<?php echo admin_url('tools.php?page='.$_GET['page'].'&tab=connection'); ?>" class="nav-tab <?php if ( 'connection' == $tab ) { echo 'nav-tab-active'; } ?>">
 			<?php _e( 'Mailbox Details', 'post-by-email' ); ?>
 		</a>
+		<a id="nav-security" href="<?php echo admin_url('tools.php?page='.$_GET['page'].'&tab=security'); ?>" class="nav-tab <?php if ( 'security' == $tab ) { echo 'nav-tab-active'; } ?>">
+			<?php _e( 'Security', 'post-by-email' ); ?>
+		</a>
 		<a id="nav-log" href="<?php echo admin_url('tools.php?page='.$_GET['page'].'&tab=log'); ?>" class="nav-tab <?php if ( 'log' == $tab ) { echo 'nav-tab-active'; } ?>">
 			<?php _e( 'Activity Log', 'post-by-email' ); ?>
 		</a>
@@ -44,14 +47,11 @@
 		<div class='tab-content' id='tab-main' <?php if ( 'main' != $tab ) { echo 'style="display:none;"'; } ?>>
 			<p>
 				<?php
-					printf( __( 'To post to WordPress by e-mail you must set up a secret e-mail account
-								 with IMAP or POP3 access. Any mail received at this address will be posted, so
-								 it&#8217;s a good idea to keep this address very secret. Here are three
-								 random strings you could use: <kbd>%s</kbd>, <kbd>%s</kbd>, <kbd>%s</kbd>.',
-								 'post-by-email' ),
-							wp_generate_password( 8, false ),
-							wp_generate_password( 8, false ),
-							wp_generate_password( 8, false ) )
+					_e( "To post to WordPress by e-mail you must set up a special-purpose e-mail account
+						with IMAP or POP3 access. Any mail received at this address will be posted, so it's
+						a good idea to keep this address very secret.  For an extra level of security, enable
+						PIN-based authentication under the Security tab.",
+						'post-by-email' );
 				?>
 			</p>
 
@@ -170,6 +170,51 @@
 			<input type="button" id="resetButton" class="button-secondary" value="<?php esc_attr_e( 'Reset to Defaults', 'post-by-email'); ?>" />
 			<?php submit_button(); ?>
 		</div>
+
+		<div class='tab-content' id='tab-security' <?php if ( 'security' != $tab ) { echo 'style="display:none;"'; } ?>>
+			<p>
+				<?php
+					_e( 'If you do not require a PIN to create a new post, anyone who knows your email address and the address of your Post By Email inbox will be able to post to this blog.',
+						'post-by-email' );
+				?>
+			</p>
+			<p>
+				<?php
+					_e( 'Once you have enabled PIN-based authentication, include the PIN in your email with a shortcode.  Emails that do not include the correct PIN will be discarded.', 'post-by-email' );
+				?>
+			</p>
+			<p>
+				<?php _e( 'Example:', 'post-by-email' ); ?> <kbd>[pin 12345]</kbd>
+			</p>
+
+			<table class="form-table">
+				<tr valign="top">
+					<th scope="row">
+						<label for="post_by_email_options[pin_required]">
+							<?php _e( 'Require a PIN to post?', 'post-by-email' ); ?>
+						</label>
+					</th>
+					<td>
+						<input type="checkbox" name="post_by_email_options[pin_required]" id="post_by_email_options[pin_required]" <?php checked( $options['pin_required'] ); ?> />
+					</td>
+				</tr>
+				<tr class="post-by-email-pin-settings" <?php if ( ! $options['pin_required'] ) { echo 'style="display:none;";'; } ?>>
+					<th scope="row">
+						<label for="post_by_email_options[pin]">
+							<?php _e( 'PIN', 'post-by-email' ); ?>
+						</label>
+					</th>
+					<td>
+						<input type="text" name="post_by_email_options[pin]" id="post_by_email_options[pin]" value="<?php echo $options['pin']; ?>" />
+						<input type="button" class="button-secondary" href='' id="generatePIN" value="<?php _e( 'Generate' ); ?>" />
+					</td>
+				</tr>
+			</table>
+
+			<?php submit_button(); ?>
+
+		</div>
+
 	</form>
 
 	<div class='tab-content' id='tab-log' <?php if ( 'log' != $tab ) { echo 'style="display:none;"'; } ?>>
@@ -224,3 +269,8 @@
 		<?php endif; ?>
 	</div>
 </div>
+
+<script type="text/javascript">
+	var logNonce = "<?php echo wp_create_nonce( 'post-by-email-clear-log' ); ?>";
+	var pinNonce = "<?php echo wp_create_nonce( 'post-by-email-generate-pin' ); ?>";
+</script>

@@ -73,6 +73,8 @@ class Post_By_Email {
 		'default_email_category'    => '',
 		'delete_messages'           => true,
 		'status'                    => 'unconfigured',
+		'pin_required'              => false,
+		'pin'                       => '',
 	);
 
 	/**
@@ -314,6 +316,18 @@ class Post_By_Email {
 
 			if ( '' == $post_title )
 				$post_title = $subject;
+
+			/* validate PIN */
+			if ( $options['pin_required'] ) {
+				$pin = $this->find_shortcode( 'pin', $post_content );
+				$pin = implode( $pin );
+
+				if( $pin != $options['pin'] ) {
+					// security check failed - move on to the next message
+					$log_message .= '<br />"' . $post_title . '" ' . __( 'failed PIN authentication; discarding.', 'post-by-email' );
+					continue;
+				}
+			}
 
 
 			/* categories */
@@ -656,7 +670,7 @@ class Post_By_Email {
 	 * @return   string    $text         Filtered text
 	 */
 	protected function filter_valid_shortcodes( $text ) {
-		foreach ( array( 'tag', 'category' ) as $shortcode ) {
+		foreach ( array( 'tag', 'category', 'pin' ) as $shortcode ) {
 			$text = preg_replace( "/\[$shortcode\s(.*?)\]/i", '', $text );	
 		}
 		return $text;

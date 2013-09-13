@@ -6,12 +6,26 @@ jQuery( document ).ready( function() {
 
 		var data = {
 			action: 'post_by_email_clear_log',
-			security: '<?php echo wp_create_nonce( "post-by-email-clear-log" ); ?>'
+			security: logNonce
 		};
 
 		jQuery.post( ajaxurl, data, function( response ) {
 			jQuery(' table#logTable' ).hide();
 			jQuery( 'a#clearLog' ).hide();
+		});
+	});
+
+	// AJAX request for a new PIN
+	jQuery( 'input#generatePIN' ).click( function( e ) {
+		e.preventDefault();
+
+		var data = {
+			action: 'post_by_email_generate_pin',
+			security: pinNonce
+		};
+
+		jQuery.post( ajaxurl, data, function( response ) {
+			jQuery( 'input#post_by_email_options\\\[pin\\\]' ).val( response );
 		});
 	});
 
@@ -34,18 +48,26 @@ jQuery( document ).ready( function() {
 		jQuery( 'input#post_by_email_options\\[delete_messages\\]' ).attr( 'disabled', false );
 	});
 
-	if( 'POP3' == jQuery( 'select#post_by_email_options\\[mailserver_protocol\\]' ).val() ) {
+	if ( 'POP3' == jQuery( 'select#post_by_email_options\\[mailserver_protocol\\]' ).val() ) {
 		jQuery( 'input#post_by_email_options\\[delete_messages\\]' ).attr( 'checked', 'checked' );
 		jQuery( 'input#post_by_email_options\\[delete_messages\\]' ).attr( 'disabled', true);
 	}
 
 	jQuery( 'select#post_by_email_options\\[mailserver_protocol\\]' ).change( function( e ) {
-		if( 'POP3' == jQuery( e.target ).val() ) {
+		if ( 'POP3' == jQuery( e.target ).val() ) {
 			jQuery( 'input#post_by_email_options\\[delete_messages\\]' ).attr( 'checked', 'checked' );
 			jQuery( 'input#post_by_email_options\\[delete_messages\\]' ).attr( 'disabled', true);
-		}
-		else {
+		} else {
 			jQuery( 'input#post_by_email_options\\[delete_messages\\]' ).attr( 'disabled', false );
+		}
+	});
+
+	// PIN tab
+	jQuery( 'input#post_by_email_options\\[pin_required\\]' ).click( function( e ) {
+		if ( jQuery( e.target ).attr('checked') ) {
+			jQuery( 'tr.post-by-email-pin-settings' ).show();
+		} else {
+			jQuery( 'tr.post-by-email-pin-settings' ).hide();
 		}
 	});
 

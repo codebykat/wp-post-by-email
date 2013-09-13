@@ -18,6 +18,11 @@ The "From" address is matched to WordPress users in the database to determine th
 
 Once an email has been successfully posted to the blog, it will either be marked as read (IMAP servers only) or deleted from the mailbox.
 
+You can set categories and tags on your posts by including shortcodes in your email.  These should be space-separated.  Use slugs for tags and either slugs or IDs for categories.  Terms that do not yet exist will be created.  Examples:
+`[category posted-by-email another-category]`
+`[tag cool-stuff]`
+`[category 14]`
+
 Updates on the project can be found on the [Make WordPress Core blog](http://make.wordpress.org/core/tag/post-by-email/).
 
 ## Installation ##
@@ -38,6 +43,9 @@ To run the tests:
 1. From the plugin directory, run `WP_TESTS_DIR=/path/to/WordPress/test/install phpunit`
 
 ## Changelog ##
+
+### 1.0.2 ###
+* Support shortcodes to specify categories and tags.
 
 ### 1.0.1 ###
 * Added tabs and additional options to options panel.

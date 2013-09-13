@@ -24,7 +24,7 @@ class Post_By_Email {
 	 *
 	 * @var     string
 	 */
-	protected $version = '1.0.1';
+	protected $version = '1.0.2';
 
 	/**
 	 * Unique identifier for the plugin.
@@ -315,12 +315,37 @@ class Post_By_Email {
 			if ( '' == $post_title )
 				$post_title = $subject;
 
-			/* category */
-			$post_category = array( $options['default_email_category'] );
+
+			/* categories */
+
+			$shortcode_categories = $this->find_shortcode( 'category', $post_content );
+			$post_category = array();
+			if ( empty( $shortcode_categories ) ) {
+				$post_category[] = $options['default_email_category'];
+			}
+			foreach ( $shortcode_categories as $cat ) {
+				if ( is_numeric( $cat ) ) {
+					$post_category[] = $cat;
+				} elseif ( get_category_by_slug( $cat ) ) {
+					$term = get_category_by_slug( $cat );
+					$post_category[] = $term->term_id;
+				} else {  // create new category
+					$new_category = wp_insert_term( $cat, 'category' );
+					if( $new_category ) {
+						$post_category[] = $new_category['term_id'];
+					}
+				}
+			}
+
+			/* get tags from shortcode */
+			$tags_input = $this->find_shortcode( 'tag', $post_content );
+
+
+			$post_content = $this->filter_valid_shortcodes( $post_content );
 
 
 			/* create the post */
-			$post_data = compact( 'post_content', 'post_title', 'post_date', 'post_date_gmt', 'post_author', 'post_category', 'post_status' );
+			$post_data = compact( 'post_content', 'post_title', 'post_date', 'post_date_gmt', 'post_author', 'post_category', 'post_status', 'tags_input' );
 			$post_data = wp_slash( $post_data );
 
 			$post_ID = wp_insert_post( $post_data );
@@ -601,6 +626,40 @@ class Post_By_Email {
 		catch ( Horde_Imap_Client_Exception $e ) {
 			$this->save_error_message( __( 'An error occurred: ', 'post-by-email' ) . $e->getMessage() );
 		}
+	}
+
+	/**
+	 * Look for a shortcode and return its arguments.
+	 *
+	 * @since    1.0.2
+	 *
+	 * @param    string    $shortcode    Shortcode to look for
+	 *
+	 * @param    string    $text         Text to search within
+	 *
+	 * @return   array     $args         Shortcode arguments
+	 */
+	protected function find_shortcode( $shortcode, $text ) {
+		if ( preg_match( "/\[$shortcode\s(.*?)\]/i", $text, $matches ) ) {
+			return explode( ' ', $matches[1] );
+		}
+		return array();
+	}
+
+	/**
+	 * Filter shortcodes out of the message content.
+	 *
+	 * @since    1.0.2
+	 *
+	 * @param    string    $text         Text to search within
+	 *
+	 * @return   string    $text         Filtered text
+	 */
+	protected function filter_valid_shortcodes( $text ) {
+		foreach ( array( 'tag', 'category' ) as $shortcode ) {
+			$text = preg_replace( "/\[$shortcode\s(.*?)\]/i", '', $text );	
+		}
+		return $text;
 	}
 
 	/**

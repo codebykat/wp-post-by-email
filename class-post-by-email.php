@@ -24,7 +24,7 @@ class Post_By_Email {
 	 *
 	 * @var     string
 	 */
-	protected $version = '1.0.2';
+	protected $version = '1.0.3';
 
 	/**
 	 * Unique identifier for the plugin.
@@ -75,6 +75,7 @@ class Post_By_Email {
 		'status'                    => 'unconfigured',
 		'pin_required'              => false,
 		'pin'                       => '',
+		'discard_pending'           => false,
 	);
 
 	/**
@@ -289,6 +290,11 @@ class Post_By_Email {
 				$user = new WP_User( $post_author );
 				$post_status = ( $user->has_cap( 'publish_posts' ) ) ? 'publish' : 'pending';
 			} else {
+				if ( $options['discard_pending'] ) {
+					$log_message .= '<br />' . sprintf( __( "No author match for %s (Subject: %s); skipping.", 'post-by-email' ),
+															$from_email, $subject );
+					continue;
+				}
 				// use admin if no author found
 				$post_author = $this->get_admin_id();
 				$post_status = 'pending';

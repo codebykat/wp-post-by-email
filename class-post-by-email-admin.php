@@ -111,6 +111,10 @@ class Post_By_Email_Admin {
 		$options['pin_required'] = isset( $input['pin_required'] ) && '' != $input['pin_required'];
 		$options['pin'] = trim( $input['pin'] );
 
+		if ( isset( $input['discard_pending'] ) ) {
+			$options['discard_pending'] = ( 'discard' == $input['discard_pending'] );
+		}
+
 		// this is ridiculous
 		if ( isset ( $input['status'] ) && in_array( $input['status'], array( 'unconfigured', 'error', '') ) ) {
 			// maintain saved state
@@ -131,6 +135,13 @@ class Post_By_Email_Admin {
 			// clear the transient and any error conditions if we have good options now
 			delete_transient( 'mailserver_last_checked' );
 			$options['status'] = '';
+		}
+
+		// make sure all default options are set
+		foreach ( $default_options as $key => $value ) {
+			if ( ! isset( $options[ $key ] ) ) {
+				$options[ $key ] = $value;
+			}
 		}
 
 		return $options;

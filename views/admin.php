@@ -198,7 +198,7 @@
 						<input type="checkbox" name="post_by_email_options[pin_required]" id="post_by_email_options[pin_required]" <?php checked( $options['pin_required'] ); ?> />
 					</td>
 				</tr>
-				<tr class="post-by-email-pin-settings" <?php if ( ! $options['pin_required'] ) { echo 'style="display:none;";'; } ?>>
+				<tr valign="top" class="post-by-email-pin-settings" <?php if ( ! $options['pin_required'] ) { echo 'style="display:none;";'; } ?>>
 					<th scope="row">
 						<label for="post_by_email_options[pin]">
 							<?php _e( 'PIN', 'post-by-email' ); ?>
@@ -207,6 +207,25 @@
 					<td>
 						<input type="text" name="post_by_email_options[pin]" id="post_by_email_options[pin]" value="<?php echo $options['pin']; ?>" />
 						<input type="button" class="button-secondary" href='' id="generatePIN" value="<?php _e( 'Generate' ); ?>" />
+					</td>
+				</tr>
+				<tr valign="top">
+					<th scope="row">
+						<label for="post_by_email_options[discard_pending]">
+							<?php _e( 'What should be done with posts from unrecognized emails?', 'post-by-email' ); ?>
+						</label>
+					</th>
+					<td>
+						<select name="post_by_email_options[discard_pending]">
+							<option value="pending" <?php selected( $options['discard_pending'], false ); ?>><?php _e( 'Save as drafts' ); ?></option>
+							<option value="discard" <?php selected( $options['discard_pending'] ); ?>><?php _e( 'Discard them' ); ?></option>
+						</select>
+						<p class="description">
+							<?php _e( "Any messages received from email addresses registered to WordPress users will be posted
+								(set to pending if they don't have the publish posts capability).  For emails that don't match
+								a user in the system, you can choose to skip the message or post it as a pending draft.",
+								'post-by-email' ); ?>
+						</p>
 					</td>
 				</tr>
 			</table>

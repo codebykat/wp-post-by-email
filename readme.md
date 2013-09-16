@@ -18,16 +18,17 @@ The "From" address is matched to WordPress users in the database to determine th
 
 Once an email has been successfully posted to the blog, it will either be marked as read (IMAP servers only) or deleted from the mailbox.
 
-You can set categories and tags on your posts by including shortcodes in your email.  These should be space-separated.  Use slugs for tags and either slugs or IDs for categories.  Terms that do not yet exist will be created.  Examples:
+You can set categories, tags and custom taxonomy terms on your posts by including shortcodes in your email.  These should be space-separated.  Use slugs for tags (and non-hierarchical taxonomies) and either slugs or IDs for categories (/ hierarchical taxonomies).  Terms that do not yet exist will be created.  Examples:
 `[category posted-by-email another-category]`
 `[tag cool-stuff]`
 `[category 14]`
+`[custom-taxonomy-name thing1 thing2]`
+`[another-custom-taxonomy 2 3 5]`
 
 Updates on the project can be found on the [Make WordPress Core blog](http://make.wordpress.org/core/tag/post-by-email/).
 
 ## Installation ##
 
-1. Apply the patch found in the plugin directory to WordPress Core.  See [Applying .patch or .diff files](https://codex.wordpress.org/Using_Subversion#Applying_.patch_or_.diff_files).
 1. See [Installing Plugins](http://codex.wordpress.org/Managing_Plugins#Installing_Plugins).
 1. Activate the plugin through the 'Plugins' menu.
 1. Configure mailbox information under plugin settings.
@@ -43,6 +44,14 @@ To run the tests:
 1. From the plugin directory, run `WP_TESTS_DIR=/path/to/WordPress/test/install phpunit`
 
 ## Changelog ##
+
+### 1.0.3 ###
+* Added option to choose what to do when message senders don't match WP users (discard or set to pending).
+* Added shortcode support for custom taxonomy terms.
+* Added support for attachments.
+* Fixed some bugs in PHP 5.2.
+* Fixed bugs with the admin notices and default options.
+* Switched manual check to a trigger for do_action and disabled wp-mail.php entirely.
 
 ### 1.0.2 ###
 * Support shortcodes to specify categories and tags.

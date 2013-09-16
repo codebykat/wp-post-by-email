@@ -1,8 +1,8 @@
 diff --git wp-admin/includes/schema.php wp-admin/includes/schema.php
-index b200995..ec5d1ca 100644
+index 037210a..a5e896b 100644
 --- wp-admin/includes/schema.php
 +++ wp-admin/includes/schema.php
-@@ -369,10 +369,6 @@ function populate_options() {
+@@ -373,10 +373,6 @@ function populate_options() {
  	'comments_notify' => 1,
  	'posts_per_rss' => 10,
  	'rss_use_excerpt' => 0,
@@ -13,7 +13,7 @@ index b200995..ec5d1ca 100644
  	'default_category' => 1,
  	'default_comment_status' => 'open',
  	'default_ping_status' => 'open',
-@@ -476,6 +472,9 @@ function populate_options() {
+@@ -480,6 +476,9 @@ function populate_options() {
  
  	// 3.5
  	'link_manager_enabled' => 0,
@@ -24,14 +24,14 @@ index b200995..ec5d1ca 100644
  
  	// 3.3
 diff --git wp-admin/includes/upgrade.php wp-admin/includes/upgrade.php
-index 0d17d8f..63e6c1a 100644
+index cfbaac8..354cb6f 100644
 --- wp-admin/includes/upgrade.php
 +++ wp-admin/includes/upgrade.php
 @@ -402,10 +402,15 @@ function upgrade_all() {
  	if ( $wp_current_db_version < 22422 )
  		upgrade_350();
  
-+	if ( $wp_current_db_version < 25150 )
++	if ( $wp_current_db_version < 25448 )
 +		upgrade_370();
 +
  	maybe_disable_link_manager();
@@ -68,12 +68,12 @@ index 0d17d8f..63e6c1a 100644
  /**
 + * Disables Post by Email options if, at the time of upgrade, the settings have not been changed from original defaults.
 + *
-+ * @since 3.6.0
++ * @since 3.7.0
 + */
 +function maybe_disable_post_by_email() {
 +	global $wp_current_db_version;
 +
-+	if ( $wp_current_db_version >= 25134 && get_option( 'post_by_email_enabled' ) && 'mail.example.com' == get_option( 'mailserver_url' ) )
++	if ( $wp_current_db_version >= 25448 && get_option( 'post_by_email_enabled' ) && 'mail.example.com' == get_option( 'mailserver_url' ) )
 +		update_option( 'post_by_email_enabled', 0 );
 +}
 +
@@ -82,13 +82,14 @@ index 0d17d8f..63e6c1a 100644
   *
   * @since 2.9.0
 diff --git wp-admin/options-writing.php wp-admin/options-writing.php
-index 8015bae..8c0ea6d 100644
+index 87fbf53..4202ef6 100644
 --- wp-admin/options-writing.php
 +++ wp-admin/options-writing.php
-@@ -28,14 +28,6 @@ get_current_screen()->add_help_tab( array(
+@@ -28,15 +28,6 @@ get_current_screen()->add_help_tab( array(
  	'content' => '<p>' . __('Press This is a bookmarklet that makes it easy to blog about something you come across on the web. You can use it to just grab a link, or to post an excerpt. Press This will even allow you to choose from images included on the page and use them in your post. Just drag the Press This link on this screen to your bookmarks bar in your browser, and you&#8217;ll be on your way to easier content creation. Clicking on it while on another website opens a popup window with all these options.') . '</p>',
  ) );
  
+-//duplicate_hook
 -if ( apply_filters( 'enable_post_by_email_configuration', true ) ) {
 -	get_current_screen()->add_help_tab( array(
 -		'id'      => 'options-postemail',
@@ -97,14 +98,15 @@ index 8015bae..8c0ea6d 100644
 -	) );
 -}
 -
- if ( apply_filters( 'enable_update_services_configuration', true ) ) {
- 	get_current_screen()->add_help_tab( array(
- 		'id'      => 'options-services',
-@@ -122,34 +114,9 @@ do_settings_fields('writing', 'remote_publishing'); // A deprecated section.
- 	<p><textarea rows="5" cols="120" readonly="readonly"><?php echo htmlspecialchars( get_shortcut_link() ); ?></textarea></p>
- </div>
+ /**
+ * Toggle site update services configuration functionality.
+ *
+@@ -132,39 +123,9 @@ do_settings_fields('writing', 'remote_publishing'); // A deprecated section.
  
--<?php if ( apply_filters( 'enable_post_by_email_configuration', true ) ) { ?>
+ <?php
+ //duplicate_hook
+-if ( apply_filters( 'enable_post_by_email_configuration', true ) ) {
+-?>
 -<h3 class="title"><?php _e('Post via e-mail') ?></h3>
 -<p><?php printf(__('To post to WordPress by e-mail you must set up a secret e-mail account with POP3 access. Any mail received at this address will be posted, so it&#8217;s a good idea to keep this address very secret. Here are three random strings you could use: <kbd>%s</kbd>, <kbd>%s</kbd>, <kbd>%s</kbd>.'), wp_generate_password(8, false), wp_generate_password(8, false), wp_generate_password(8, false)) ?></p>
 -
@@ -132,14 +134,18 @@ index 8015bae..8c0ea6d 100644
 -<?php
 -wp_dropdown_categories(array('hide_empty' => 0, 'name' => 'default_email_category', 'orderby' => 'name', 'selected' => get_option('default_email_category'), 'hierarchical' => true));
 -?>
-+<?php if ( get_option( 'post_by_email_enabled' ) && apply_filters( 'enable_post_by_email_configuration', true ) ) { ?>
+-</td>
+-</tr>
+-<?php do_settings_fields('writing', 'post_via_email'); ?>
+-</table>
++if ( get_option( 'post_by_email_enabled' ) && apply_filters( 'enable_post_by_email_configuration', true ) ) { ?>
 +<h3 class="title"><?php _e( 'Post via e-mail' ) ?></h3>
 +<p><?php _e( 'This functionality is no longer packaged with WordPress.  To continue using it, please install the <a href="http://wordpress.org/plugins/post-by-email">Post By Email plugin</a>.' ); ?></p>
- </td>
- </tr>
- <?php do_settings_fields('writing', 'post_via_email'); ?>
+ <?php } ?>
+ 
+ <?php
 diff --git wp-includes/default-filters.php wp-includes/default-filters.php
-index 7c55dfb..485faea 100644
+index b6c7527..f70458c 100644
 --- wp-includes/default-filters.php
 +++ wp-includes/default-filters.php
 @@ -301,4 +301,7 @@ add_filter( 'heartbeat_nopriv_received', 'wp_auth_check', 10, 2 );
@@ -150,19 +156,59 @@ index 7c55dfb..485faea 100644
 +add_filter( 'default_option_post_by_email_enabled', '__return_true' );
 +
  unset($filter, $action);
+diff --git wp-includes/formatting.php wp-includes/formatting.php
+index 58b4f9d..4655267 100644
+--- wp-includes/formatting.php
++++ wp-includes/formatting.php
+@@ -2819,7 +2819,6 @@ function sanitize_option($option, $value) {
+ 		case 'medium_size_h':
+ 		case 'large_size_w':
+ 		case 'large_size_h':
+-		case 'mailserver_port':
+ 		case 'comment_max_links':
+ 		case 'page_on_front':
+ 		case 'page_for_posts':
+@@ -2871,9 +2870,6 @@ function sanitize_option($option, $value) {
+ 
+ 		case 'date_format':
+ 		case 'time_format':
+-		case 'mailserver_url':
+-		case 'mailserver_login':
+-		case 'mailserver_pass':
+ 		case 'upload_path':
+ 			$value = strip_tags( $value );
+ 			$value = wp_kses_data( $value );
 diff --git wp-mail.php wp-mail.php
-index 27290b1..59351c6 100644
+index 27290b1..4020a6a 100644
 --- wp-mail.php
 +++ wp-mail.php
-@@ -10,221 +10,5 @@
+@@ -1,8 +1,13 @@
+ <?php
+ /**
+- * Gets the email message from the user's mailbox to add as
+- * a WordPress post. Mailbox connection information must be
+- * configured under Settings > Writing
++ * This file is deprecated and has been replaced by the
++ * plugin Post By Email.  Instead of loading wp-mail.php to
++ * trigger the "wp-mail.php" action, you should trigger it
++ * yourself, either in a plugin/theme hook or via wp_cron.
++ *
++ * For more information:
++ * http://wordpress.org/plugins/post-by-email/
++ * http://codex.wordpress.org/Category:WP-Cron_Functions
+  *
+  * @package WordPress
+  */
+@@ -10,221 +15,7 @@
  /** Make sure that the WordPress bootstrap has run before continuing. */
  require(dirname(__FILE__) . '/wp-load.php');
  
 -if ( ! apply_filters( 'enable_post_by_email_configuration', true ) )
 -	wp_die( __( 'This action has been disabled by the administrator.' ) );
--
++_doing_it_wrong( 'wp-mail.php', __( "This file is deprecated and should not be called directly.  Schedule the action 'wp-mail.php' instead." ), '3.7' );
+ 
  /** Allow a plugin to do a complete takeover of Post by Email **/
- do_action('wp-mail.php');
+-do_action('wp-mail.php');
 -
 -/** Get the POP3 class with which to access the mailbox. */
 -require_once( ABSPATH . WPINC . '/class-pop3.php' );
@@ -376,3 +422,5 @@ index 27290b1..59351c6 100644
 -}
 -
 -$pop3->quit();
++do_action('wp-mail.php');
+\ No newline at end of file

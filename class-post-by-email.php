@@ -377,6 +377,9 @@ class Post_By_Email {
 			if ( empty( $post_ID ) )
 				continue;
 
+			// save original message sender as post_meta, in case we want it later
+			add_post_meta( $post_ID, 'original_author', $from_email );
+
 			do_action( 'publish_phone', $post_ID );
 
 			if ( '' == $post_title ) {

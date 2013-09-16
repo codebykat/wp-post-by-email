@@ -535,11 +535,10 @@ class Horde_Mime_Part implements ArrayAccess, Countable, Serializable
      *
      * @param resource $fp      A stream containing the data to encode.
      * @param string $encoding  The encoding to use.
-     * @param string $eol       EOL string.
      *
      * @return resource  A new file resource with the encoded data.
      */
-    protected function _transferEncode($fp, $encoding, $eol)
+    protected function _transferEncode($fp, $encoding)
     {
         $this->_temp['transferEncodeClose'] = true;
 
@@ -549,20 +548,24 @@ class Horde_Mime_Part implements ArrayAccess, Countable, Serializable
             return $this->_writeStream($fp, array(
                 'filter' => array(
                     'convert.base64-encode' => array(
-                        'line-break-chars' => $eol,
+                        'line-break-chars' => $this->getEOL(),
                         'line-length' => 76
                     )
                 )
             ));
 
         case 'quoted-printable':
+            $stream = new Horde_Stream_Existing(array(
+                'stream' => $fp
+            ));
+
             /* Quoted-Printable Encoding: See RFC 2045, section 6.7 */
             return $this->_writeStream($fp, array(
                 'filter' => array(
-                    'convert.quoted-printable-encode' => array(
-                        'line-break-chars' => $eol,
+                    'convert.quoted-printable-encode' => array_filter(array(
+                        'line-break-chars' => $stream->getEOL(),
                         'line-length' => 76
-                    )
+                    ))
                 )
             ));
 
@@ -1222,11 +1225,7 @@ class Horde_Mime_Part implements ArrayAccess, Countable, Serializable
                         break;
                     }
 
-                    $parts[] = $this->_transferEncode(
-                        $this->_contents,
-                        $encoding,
-                        (empty($options['canonical']) ? $this->getEOL() : self::RFC_EOL)
-                    );
+                    $parts[] = $this->_transferEncode($this->_contents, $encoding);
 
                     /* If not using $this->_contents, we can close the stream
                      * when finished. */
@@ -1410,10 +1409,12 @@ class Horde_Mime_Part implements ArrayAccess, Countable, Serializable
             $eol = $this->getEOL();
         }
 
-        $fp = $this->_writeStream($text);
-
         stream_filter_register('horde_eol', 'Horde_Stream_Filter_Eol');
-        stream_filter_append($fp, 'horde_eol', STREAM_FILTER_READ, array('eol' => $eol));
+        $fp = $this->_writeStream($text, array(
+            'filter' => array(
+                'horde_eol' => array('eol' => $eol)
+            )
+        ));
 
         return $stream ? $fp : $this->_readStream($fp, true);
     }
@@ -1559,7 +1560,8 @@ class Horde_Mime_Part implements ArrayAccess, Countable, Serializable
         }
 
         if ($rfc822) {
-            if (empty($this->_parts)) {
+            if (empty($this->_parts) &&
+                ($this->getPrimaryType() != 'multipart')) {
                 $this->setMimeId($id . '1');
             } else {
                 if (empty($id) && ($this->getType() == 'message/rfc822')) {
@@ -1689,10 +1691,10 @@ class Horde_Mime_Part implements ArrayAccess, Countable, Serializable
         $old_basepart = $this->_basepart;
         $this->_basepart = true;
 
-        /* Does the SMTP backend support 8BITMIME (RFC 1652) or
-         * BINARYMIME (RFC 3030) extensions? Requires Net_SMTP version
-         * 1.3+. */
+        /* Does the SMTP backend support 8BITMIME (RFC 1652)? */
+        $canonical = true;
         $encode = self::ENCODE_7BIT;
+
         if (isset($opts['encode'])) {
             /* Always allow 7bit encoding. */
             $encode |= $opts['encode'];
@@ -1702,33 +1704,23 @@ class Horde_Mime_Part implements ArrayAccess, Countable, Serializable
                 if (isset($smtp_ext['8BITMIME'])) {
                     $encode |= self::ENCODE_8BIT;
                 }
-                if (isset($smtp_ext['BINARYMIME'])) {
-                    $encode |= self::ENCODE_BINARY;
+            } catch (Horde_Mail_Exception $e) {}
+            $canonical = false;
+        } elseif ($mailer instanceof Horde_Mail_Transport_Smtphorde) {
+            try {
+                if ($mailer->getSMTPObject()->data_8bit) {
+                    $encode |= self::ENCODE_8BIT;
                 }
             } catch (Horde_Mail_Exception $e) {}
+            $canonical = false;
         }
 
         $msg = $this->toString(array(
-            'canonical' => true,
+            'canonical' => $canonical,
             'encode' => $encode,
             'headers' => false,
             'stream' => true
         ));
-
-        /* Make sure the message has a trailing newline. */
-        fseek($msg, -1, SEEK_END);
-        switch (fgetc($msg)) {
-        case "\r":
-            if (fgetc($msg) != "\n") {
-                fputs($msg, "\n");
-            }
-            break;
-
-        default:
-            fputs($msg, "\r\n");
-            break;
-        }
-        rewind($msg);
 
         /* Add MIME Headers if they don't already exist. */
         if (!$headers->getValue('MIME-Version')) {
@@ -1738,12 +1730,12 @@ class Horde_Mime_Part implements ArrayAccess, Countable, Serializable
         if (!empty($this->_temp['toString'])) {
             $headers->replaceHeader('Content-Transfer-Encoding', $this->_temp['toString']);
             switch ($this->_temp['toString']) {
-            case 'binary':
-                $mailer->addServiceExtensionParameter('BODY', 'BINARYMIME');
-                break;
-
             case '8bit':
-                $mailer->addServiceExtensionParameter('BODY', '8BITMIME');
+                if ($mailer instanceof Horde_Mail_Transport_Smtp) {
+                    $mailer->addServiceExtensionParameter('BODY', '8BITMIME');
+                } elseif ($mailer instanceof Horde_Mail_Transport_Smtphorde) {
+                    $mailer->send8bit = true;
+                }
                 break;
             }
         }
@@ -1755,7 +1747,7 @@ class Horde_Mime_Part implements ArrayAccess, Countable, Serializable
                 'encode' => $this->getHeaderCharset(),
                 'idn' => true
             )), $headers->toArray(array(
-                'canonical' => true,
+                'canonical' => $canonical,
                 'charset' => $this->getHeaderCharset()
             )), $msg);
         } catch (Horde_Mail_Exception $e) {
@@ -2083,6 +2075,9 @@ class Horde_Mime_Part implements ArrayAccess, Countable, Serializable
             $boundary = $ob->getContentTypeParameter('boundary');
             if (!is_null($boundary)) {
                 foreach (self::_findBoundary($body, 0, $boundary) as $val) {
+                    if (!isset($val['length'])) {
+                        break;
+                    }
                     $subpart = substr($body, $val['start'], $val['length']);
                     list($hdr_pos, $eol) = self::_findHeader($subpart);
                     $ob->addPart(self::_getStructure(substr($subpart, 0, $hdr_pos), substr($subpart, $hdr_pos + $eol), array(

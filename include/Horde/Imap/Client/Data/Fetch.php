@@ -564,4 +564,5 @@ class Horde_Imap_Client_Data_Fetch
             : $this->_msgText(false, $this->_data[$key][$id]);
     }
 
+
 }

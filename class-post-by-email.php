@@ -714,8 +714,8 @@ class Post_By_Email {
 	 * @since 0.9.7
 	 */
 	public static function load() {
-		self::$path = __DIR__;
-		spl_autoload_register( array( get_called_class(), 'autoload' ) );
+		self::$path = dirname( __FILE__ );
+		spl_autoload_register( array( 'Post_By_Email', 'autoload' ) );
 	}
 
 	/**

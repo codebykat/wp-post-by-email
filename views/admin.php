@@ -241,7 +241,8 @@
 			?>
 		</p>
 		<p>
-			<a href="<?php echo add_query_arg( 'check_mail', true ); ?>" class="button-secondary">
+			<a href="<?php echo add_query_arg( 'check_mail', true ); ?>" class="button-secondary"
+				<?php if ( 'unconfigured' == $options['status'] ) { echo 'disabled'; } ?> >
 				<?php _e( 'Check now', 'post-by-email' ); ?>
 			</a>
 		</p>

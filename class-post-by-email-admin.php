@@ -83,13 +83,10 @@ class Post_By_Email_Admin {
 
 		$default_options = Post_By_Email::$default_options;
 
-		$mailserver_url = trim( $input['mailserver_url'] );
-		if ( $mailserver_url != $default_options['mailserver_url'] ) {
-			$options['mailserver_url'] = $mailserver_url;
-		}
+		$options['mailserver_url'] = trim( $input['mailserver_url'] );
 
 		$mailserver_protocol = trim( $input['mailserver_protocol'] );
-		if ( in_array( $options['mailserver_protocol'], array( 'POP3', 'IMAP' ) ) ) {
+		if ( in_array( $mailserver_protocol, array( 'POP3', 'IMAP' ) ) ) {
 			$options['mailserver_protocol'] = $mailserver_protocol;
 		}
  
@@ -99,15 +96,8 @@ class Post_By_Email_Admin {
 			$options['mailserver_port'] = $mailserver_port;
 		}
 
-		$mailserver_login = trim( $input['mailserver_login'] );
-		if ( $mailserver_login != $default_options['mailserver_login'] ) {
-			$options['mailserver_login'] = $mailserver_login;
-		}
-
-		$mailserver_pass = trim( $input['mailserver_pass'] );
-		if ( '' != $mailserver_pass ) {
-			$options['mailserver_pass'] = $mailserver_pass;
-		}
+		$options['mailserver_login'] = trim( $input['mailserver_login'] );
+		$options['mailserver_pass'] = trim( $input['mailserver_pass'] );
 
 		// default email category must be the ID of a real category
 		$default_email_category = $input['default_email_category'];
@@ -118,16 +108,30 @@ class Post_By_Email_Admin {
 		$options['ssl'] = isset( $input['ssl'] ) && '' != $input['ssl'];
 		$options['delete_messages'] = isset( $input['delete_messages'] ) && '' != $input['delete_messages'];
 
-		if ( $options['mailserver_url'] && $options['mailserver_port']
-			&& $options['mailserver_login'] && $options['mailserver_pass'] ) {
+		$options['pin_required'] = isset( $input['pin_required'] ) && '' != $input['pin_required'];
+		$options['pin'] = trim( $input['pin'] );
 
-			// clear the transient and any error conditions if options have been updated
+		// this is ridiculous
+		if ( isset ( $input['status'] ) && in_array( $input['status'], array( 'unconfigured', 'error', '') ) ) {
+			// maintain saved state
+			$options['status'] = $input['status'];
+		}
+		elseif ( ( $options['mailserver_url'] == $default_options['mailserver_url'] )
+			|| ( '' == $options['mailserver_url'] )
+			|| ( $options['mailserver_login'] == $default_options['mailserver_login'] )
+			|| ( '' == $options['mailserver_login'] )
+			|| ( '' == $options['mailserver_pass'] )
+			|| ( '' == $options['mailserver_port'] )
+			|| ( '' == $options['mailserver_protocol' ] )
+			) {
+			// detect if settings are blank or defaults
+			$options['status'] = 'unconfigured';
+		}
+		else {
+			// clear the transient and any error conditions if we have good options now
 			delete_transient( 'mailserver_last_checked' );
 			$options['status'] = '';
 		}
-
-		$options['pin_required'] = isset( $input['pin_required'] ) && '' != $input['pin_required'];
-		$options['pin'] = trim( $input['pin'] );
 
 		return $options;
 	}

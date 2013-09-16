@@ -235,14 +235,15 @@ class Post_By_Email {
 		set_transient( 'mailserver_last_checked', true, WP_MAIL_INTERVAL );
 
 		$options = get_option( 'post_by_email_options' );
-		$options['last_checked'] = current_time( 'timestamp' );
-		$options['status'] = '';
-		update_option( 'post_by_email_options', $options );
 
 		// if options aren't set, there's nothing to do, move along
 		if ( 'unconfigured' == $options['status'] ) {
 			return;
 		}
+
+		$options['last_checked'] = current_time( 'timestamp' );
+		$options['status'] = '';
+		update_option( 'post_by_email_options', $options );
 
 		$this->connection = $this->open_mailbox_connection( $options );
 

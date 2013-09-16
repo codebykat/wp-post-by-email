@@ -380,6 +380,17 @@ class Post_By_Email {
 			// save original message sender as post_meta, in case we want it later
 			add_post_meta( $post_ID, 'original_author', $from_email );
 
+			/* attachments */
+			$attachment_count = $this->save_attachments( $uid, $post_ID );
+			if ( $attachment_count > 0 ) {
+				// add gallery to posts with attachments
+				$post_info = array(
+					'ID' => $post_ID,
+					'post_content' => $post_content . '[gallery]'
+				);
+				wp_update_post( $post_info );
+			}
+
 			do_action( 'publish_phone', $post_ID );
 
 			if ( '' == $post_title ) {
@@ -621,6 +632,84 @@ class Post_By_Email {
 		$content = trim( $content );
 
 		return $content;
+	}
+
+	/**
+	 * Get a message's attachments from the mail server and associate them with the post.
+	 *
+	 * @since    1.0.3
+	 *
+	 * @param    int       Message UID
+	 * @param    int       ID of the Post to attach to
+	 *
+	 * @return   int       Number of attachments saved
+	 */
+	protected function save_attachments( $uid, $postID ) {
+		$query = new Horde_Imap_Client_Fetch_Query();
+		$query->structure();
+
+		$list = $this->connection->fetch( 'INBOX', $query, array(
+			'ids' => $uid
+		));
+
+		$part = $list->first()->getStructure();
+		$map = $part->ContentTypeMap();
+
+		$attachment_count = 0;
+		$post_thumbnail = false;
+
+		foreach ( $map as $key => $value ) {
+			$p = $part->getPart( $key );
+
+			if ( 'attachment' == $p->getDisposition() ) {
+				$mime_id = $key;
+				$filename = $p->getName();
+				$filetype = $p->getType();
+
+				$query2 = new Horde_Imap_Client_Fetch_Query();
+				$query2->bodyPart( $mime_id, array(
+					'decode' => true,
+					'peek' => true
+				));
+
+				$list2 = $this->connection->fetch( 'INBOX', $query2, array(
+					'ids' => $uid
+				));
+
+				$message = $list2->first();
+
+				$image_data = $message->getBodyPart( $mime_id );
+				$image_data_decoded = base64_decode( $image_data );
+
+				$upload_dir = wp_upload_dir();
+				$directory = $upload_dir['basedir'] . $upload_dir['subdir'];
+
+				wp_mkdir_p( $directory );
+				file_put_contents( $directory . '/' . $filename, $image_data_decoded );
+
+				// add attachment to the post
+				$attachment_args = array(
+					'post_title' => $filename,
+					'post_content' => '',
+					'post_status' => 'publish',
+					'post_mime_type' => $filetype,
+				);
+
+				$attachment_id = wp_insert_attachment( $attachment_args, $directory . '/' . $filename, $postID );
+				$attachment_metadata = wp_generate_attachment_metadata( $attachment_id, $directory . '/' . $filename );
+				wp_update_attachment_metadata( $attachment_id, $attachment_metadata );
+				$attachment_count++;
+
+				// make the first image attachment the featured image
+				$image_types = array( 'image/jpeg', 'image/jpg', 'image/png', 'image/gif' );
+				if ( false == $post_thumbnail && in_array( $filetype, $image_types ) ) {
+					set_post_thumbnail( $postID, $attachment_id );
+					$post_thumbnail = true;
+				}
+			}
+		}
+
+		return $attachment_count;
 	}
 
 	/**

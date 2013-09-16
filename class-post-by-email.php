@@ -227,7 +227,7 @@ class Post_By_Email {
 		$last_checked = get_transient( 'mailserver_last_checked' );
 
 		if ( $last_checked && ! WP_DEBUG ) {
-			$log_message = __( 'Slow down cowboy, no need to check for new mails so often!', 'post-by-email' );
+			$log_message = __( 'Please wait at least five minutes to check mail again!', 'post-by-email' );
 			$this->save_log_message( $log_message );
 			return;
 		}
@@ -710,6 +710,9 @@ class Post_By_Email {
 			$options = get_option( 'post_by_email_options' );
 			$options['status'] = 'error';
 			update_option( 'post_by_email_options', $options );
+
+			// clear the transient so the user can trigger another check right away
+			delete_transient( 'mailserver_last_checked' );
 		}
 	}
 

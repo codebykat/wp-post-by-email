@@ -110,6 +110,9 @@ class Post_By_Email {
 		// add hooks to check for mail
 		add_action( 'wp-mail.php', array( $this, 'manual_check_email' ) );
 		add_action( 'post-by-email-wp-mail.php', array( $this, 'check_email' ) );
+
+		// disable wp-mail.php
+		add_filter( 'enable_post_by_email_configuration', '__return_false' );
 	}
 
 	/**
@@ -207,7 +210,8 @@ class Post_By_Email {
 
 		$this->check_email();
 
-		wp_safe_redirect( admin_url( 'tools.php?page=post-by-email&tab=log' ) );
+		$args = array( 'page' => 'post-by-email', 'tab' => 'log' );
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'tools.php' ) ) );
 	}
 
 	/**

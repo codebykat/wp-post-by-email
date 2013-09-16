@@ -25,16 +25,16 @@
 	<?php $tab = isset( $_GET['tab'] ) ? $_GET['tab'] : 'main'; ?>
 
 	<h2 class="nav-tab-wrapper">
-		<a id="nav-main" href="<?php echo admin_url('tools.php?page='.$_GET['page']); ?>" class="nav-tab <?php if ( 'main' == $tab ) { echo 'nav-tab-active'; } ?>">
+		<a id="nav-main" href="<?php echo add_query_arg( 'tab', false ); ?>" class="nav-tab <?php if ( 'main' == $tab ) { echo 'nav-tab-active'; } ?>">
 			<?php _e( 'Basic Settings', 'post-by-email' ); ?>
 		</a>
-		<a id="nav-connection" href="<?php echo admin_url('tools.php?page='.$_GET['page'].'&tab=connection'); ?>" class="nav-tab <?php if ( 'connection' == $tab ) { echo 'nav-tab-active'; } ?>">
+		<a id="nav-connection" href="<?php echo add_query_arg( 'tab', 'connection' ); ?>" class="nav-tab <?php if ( 'connection' == $tab ) { echo 'nav-tab-active'; } ?>">
 			<?php _e( 'Mailbox Details', 'post-by-email' ); ?>
 		</a>
-		<a id="nav-security" href="<?php echo admin_url('tools.php?page='.$_GET['page'].'&tab=security'); ?>" class="nav-tab <?php if ( 'security' == $tab ) { echo 'nav-tab-active'; } ?>">
+		<a id="nav-security" href="<?php echo add_query_arg( 'tab', 'security' ); ?>" class="nav-tab <?php if ( 'security' == $tab ) { echo 'nav-tab-active'; } ?>">
 			<?php _e( 'Security', 'post-by-email' ); ?>
 		</a>
-		<a id="nav-log" href="<?php echo admin_url('tools.php?page='.$_GET['page'].'&tab=log'); ?>" class="nav-tab <?php if ( 'log' == $tab ) { echo 'nav-tab-active'; } ?>">
+		<a id="nav-log" href="<?php echo add_query_arg( 'tab', 'log' ); ?>" class="nav-tab <?php if ( 'log' == $tab ) { echo 'nav-tab-active'; } ?>">
 			<?php _e( 'Activity Log', 'post-by-email' ); ?>
 		</a>
 	</h2>
@@ -241,7 +241,7 @@
 			?>
 		</p>
 		<p>
-			<a href="<?php echo site_url( 'wp-mail.php' ); ?>" class="button-secondary">
+			<a href="<?php echo add_query_arg( 'check_mail', true ); ?>" class="button-secondary">
 				<?php _e( 'Check now', 'post-by-email' ); ?>
 			</a>
 		</p>

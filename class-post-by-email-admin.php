@@ -45,6 +45,9 @@ class Post_By_Email_Admin {
 		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 	
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+
+		// allow for manual trigger of the wp-mail.php action hook
+		add_action( 'admin_init', array( $this, 'maybe_check_mail' ) );
 	}
 
 	/**
@@ -54,6 +57,17 @@ class Post_By_Email_Admin {
 	 */
 	public function add_plugin_settings() {
 		register_setting( 'post_by_email_options', 'post_by_email_options', array( $this, 'post_by_email_validate' ) );
+	}
+
+	/**
+	* Initiate manual check for new mail.
+	*
+	* @since    1.0.3
+	*/
+	public function maybe_check_mail() {
+		if ( isset( $_GET['check_mail'] ) ) {
+			do_action( 'wp-mail.php' );
+		}
 	}
 
 	/**
@@ -168,7 +182,7 @@ class Post_By_Email_Admin {
 	*/
 	public function admin_notices() {
 		$options = get_option( 'post_by_email_options' );
-		$settings_url = admin_url( 'tools.php?page=post-by-email' );
+		$settings_url = add_query_arg( 'page', 'post-by-email', admin_url( 'tools.php' ) );
 		if ( ! $options || ! isset( $options['status'] ) || 'unconfigured' == $options['status'] ) {
 			echo "<div class='error'><p>";
 			_e( "Notice: Post By Email is currently disabled.  To post to your blog via email, please <a href='$settings_url'>configure your settings now</a>.", 'post-by-email' );

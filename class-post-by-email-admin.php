@@ -83,26 +83,44 @@ class Post_By_Email_Admin {
 
 		$default_options = Post_By_Email::$default_options;
 
-		$options['mailserver_url'] = trim( $input['mailserver_url'] );
+		/* no validation here, just sanitation */
+		$options['mailserver_url'] = wp_kses_data( strip_tags( $input['mailserver_url'] ) );
+		$options['mailserver_login'] = wp_kses_data( strip_tags( $input['mailserver_login'] ) );
+		$options['mailserver_pass'] = wp_kses_data( strip_tags( $input['mailserver_pass'] ) );
 
 		$mailserver_protocol = trim( $input['mailserver_protocol'] );
 		if ( in_array( $mailserver_protocol, array( 'POP3', 'IMAP' ) ) ) {
 			$options['mailserver_protocol'] = $mailserver_protocol;
+		} else {
+			$error_message .= __( "Could not save protocol: must be POP3 or IMAP.", 'post-by-email' );
+			add_settings_error( 'post_by_email_options',
+				'post_by_email_options[mailserver_protocol]',
+				$error_message
+			);
 		}
  
 		// port must be numeric and 16 digits max
 		$mailserver_port = trim( $input['mailserver_port'] );
 		if ( preg_match('/^[1-9][0-9]{0,15}$/', $mailserver_port ) ) {
-			$options['mailserver_port'] = $mailserver_port;
+			$options['mailserver_port'] = absint( $mailserver_port );
+		} else {
+			$error_message = __( "Could not save port number: invalid number.", 'post-by-email' );
+			add_settings_error( 'post_by_email_options',
+				'post_by_email_options[mailserver_port]',
+				$error_message
+			);
 		}
-
-		$options['mailserver_login'] = trim( $input['mailserver_login'] );
-		$options['mailserver_pass'] = trim( $input['mailserver_pass'] );
 
 		// default email category must be the ID of a real category
 		$default_email_category = $input['default_email_category'];
 		if ( get_category( $default_email_category ) ) {
 			$options['default_email_category'] = $default_email_category;
+		} else {
+			$error_message = __( 'Could not save default category: category not found.', 'post-by-email' );
+			add_settings_error( 'post_by_email_options',
+				'post_by_email_options[default_email_category]',
+				$error_message
+			);
 		}
 
 		$options['ssl'] = isset( $input['ssl'] ) && '' != $input['ssl'];
@@ -110,6 +128,25 @@ class Post_By_Email_Admin {
 
 		$options['pin_required'] = isset( $input['pin_required'] ) && '' != $input['pin_required'];
 		$options['pin'] = trim( $input['pin'] );
+
+		if ( $options['pin_required'] && '' == $options['pin'] ) {
+			$error_message = __( 'Please enter a security PIN to enable PIN authentication.', 'post-by-email' );
+			add_settings_error( 'post_by_email_options',
+				'post_by_email_options[mailserver_pin]',
+				$error_message
+			);
+			$options['pin_required'] = false;
+		}
+
+		if( strpos( $options['pin'], ']' ) ) {
+			$error_message = __( 'Error: PIN cannot contain shortcode delimiters.', 'post-by-email' );
+			add_settings_error( 'post_by_email_options',
+				'post_by_email_options[mailserver_pin]',
+				$error_message
+			);
+			$options['pin'] = '';
+			$options['pin_required'] = false;
+		}
 
 		if ( isset( $input['discard_pending'] ) ) {
 			$options['discard_pending'] = ( 'discard' == $input['discard_pending'] );
@@ -207,6 +244,8 @@ class Post_By_Email_Admin {
 			_e( "Post By Email encountered an error.  <a href='$settings_url&tab=log'>View the log</a> for details.", 'post-by-email' );
 			echo "</p></div>";
 		}
+
+		settings_errors( 'post_by_email_options' );
 	}
 
 	/**

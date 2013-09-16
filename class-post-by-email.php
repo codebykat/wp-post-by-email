@@ -692,7 +692,7 @@ class Post_By_Email {
 
 			if ( 'attachment' == $p->getDisposition() ) {
 				$mime_id = $key;
-				$filename = $p->getName();
+				$filename = sanitize_file_name( $p->getName() );
 				$filetype = $p->getType();
 
 				$query2 = new Horde_Imap_Client_Fetch_Query();

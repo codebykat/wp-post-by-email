@@ -335,7 +335,7 @@ class Post_By_Email {
 			}
 
 
-			/* categories */
+			/* shortcode: categories. [category cat1 cat2...] */
 
 			$shortcode_categories = $this->find_shortcode( 'category', $post_content );
 			$post_category = array();
@@ -356,10 +356,11 @@ class Post_By_Email {
 				}
 			}
 
-			/* get tags from shortcode */
+			/* shortcode: tags. [tag tag1 tag2...] */
+
 			$tags_input = $this->find_shortcode( 'tag', $post_content );
 
-
+			$original_post_content = $post_content;
 			$post_content = $this->filter_valid_shortcodes( $post_content );
 
 
@@ -379,6 +380,28 @@ class Post_By_Email {
 
 			// save original message sender as post_meta, in case we want it later
 			add_post_meta( $post_ID, 'original_author', $from_email );
+
+
+			/* shortcode: custom taxonomies.  [taxname term1 term2 ...] */
+			$tax_input = array();
+
+			// get all registered custom taxonomies
+			$args = array(
+				'public'   => true,
+				'_builtin' => false
+			);
+			$registered_taxonomies = get_taxonomies( $args, 'names', 'and' ); 
+
+			if ( $registered_taxonomies ) {
+				foreach ( $registered_taxonomies as $taxonomy_name ) {
+					$tax_shortcodes = $this->find_shortcode( $taxonomy_name, $original_post_content );
+					if ( count( $tax_shortcodes ) > 0 ) {
+						// pending bug fix: http://core.trac.wordpress.org/ticket/19373
+						//$tax_input[] = array( $taxonomy_name => $tax_shortcodes );
+						wp_set_post_terms( $post_ID, $tax_shortcodes, $taxonomy_name );
+					}
+				}
+			}
 
 			/* attachments */
 			$attachment_count = $this->save_attachments( $uid, $post_ID );
@@ -767,7 +790,22 @@ class Post_By_Email {
 	 * @return   string    $text         Filtered text
 	 */
 	protected function filter_valid_shortcodes( $text ) {
-		foreach ( array( 'tag', 'category', 'pin' ) as $shortcode ) {
+		$valid_shortcodes = array( 'tag', 'category', 'pin' );
+
+		// get all registered custom taxonomies
+		$args = array(
+			'public'   => true,
+			'_builtin' => false
+		);
+		$registered_taxonomies = get_taxonomies( $args, 'names', 'and' );
+
+		if ( $registered_taxonomies ) {
+			foreach ( $registered_taxonomies as $taxonomy ) {
+				$valid_shortcodes[] = $taxonomy;
+			}
+		}
+
+		foreach ( $valid_shortcodes as $shortcode ) {
 			$text = preg_replace( "/\[$shortcode\s(.*?)\]/i", '', $text );	
 		}
 		return $text;

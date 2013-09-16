@@ -47,4 +47,6 @@ if ( is_admin() ) {
     Post_By_Email_Admin::get_instance();
 }
 
+require_once( plugin_dir_path( __FILE__ ) . 'include/array_replace_recursive.php' );
+
 Post_By_Email::get_instance();

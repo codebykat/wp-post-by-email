@@ -1603,15 +1603,15 @@ class Horde_Imap_Client_Socket extends Horde_Imap_Client_Base
             ));
         } catch (Horde_Imap_Client_Exception $e) {
             switch ($e->getCode()) {
-            case $e::CATENATE_BADURL:
-            case $e::CATENATE_TOOBIG:
+            case Horde_Imap_Client_Exception::CATENATE_BADURL:
+            case Horde_Imap_Client_Exception::CATENATE_TOOBIG:
                 /* Cyrus 2.4 (at least as of .14) has a broken CATENATE (see
                  * Bug #11111). Regardless, if CATENATE is broken, we can try
                  * to fallback to APPEND. */
                 $this->_unsetCapability('CATENATE');
                 return $this->_append($mailbox, $data, $options);
 
-            case $e::DISCONNECT:
+            case Horde_Imap_Client_Exception::DISCONNECT:
                 /* Workaround broken literal8 on Cyrus. */
                 if ($this->queryCapability('BINARY')) {
                     // Need to re-login first before removing capability.
@@ -3898,7 +3898,7 @@ class Horde_Imap_Client_Socket extends Horde_Imap_Client_Base
         }
 
         switch ($server->status) {
-        case $server::BAD:
+        case Horde_Imap_Client_Interaction_Server::BAD:
             /* A tagged BAD response indicates that the tagged command caused
              * the error. This information is unknown if untagged. (RFC 3501
              * [7.1.3]) */
@@ -3914,7 +3914,7 @@ class Horde_Imap_Client_Socket extends Horde_Imap_Client_Base
                 $cmd
             );
 
-        case $server::BYE:
+        case Horde_Imap_Client_Interaction_Server::BYE:
             /* A BYE response received as part of a logout command should be
              * be treated like a regular command: a client MUST process the
              * entire command until logging out (RFC 3501 [3.4; 7.1.5]). */
@@ -3930,7 +3930,7 @@ class Horde_Imap_Client_Socket extends Horde_Imap_Client_Base
             }
             break;
 
-        case $server::NO:
+        case Horde_Imap_Client_Interaction_Server::NO:
             /* An untagged NO response indicates a warning; ignore and assume
              * that it also included response text code that is handled
              * elsewhere. Throw exception if tagged; command handlers can
@@ -3946,7 +3946,7 @@ class Horde_Imap_Client_Socket extends Horde_Imap_Client_Base
                 );
             }
 
-        case $server::PREAUTH:
+        case Horde_Imap_Client_Interaction_Server::PREAUTH:
             /* The user was pre-authenticated. (RFC 3501 [7.1.4]) */
             $this->_temp['preauth'] = true;
             break;

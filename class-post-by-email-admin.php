@@ -115,8 +115,8 @@ class Post_By_Email_Admin {
 			$options['default_email_category'] = $default_email_category;
 		}
 
-		$options['ssl'] = isset( $input['ssl'] );
-		$options['delete_messages'] = isset( $input['delete_messages'] );
+		$options['ssl'] = isset( $input['ssl'] ) && '' != $input['ssl'];
+		$options['delete_messages'] = isset( $input['delete_messages'] ) && '' != $input['delete_messages'];
 
 		if ( $options['mailserver_url'] && $options['mailserver_port']
 			&& $options['mailserver_login'] && $options['mailserver_pass'] ) {
@@ -126,7 +126,7 @@ class Post_By_Email_Admin {
 			$options['status'] = '';
 		}
 
-		$options['pin_required'] = isset( $input['pin_required'] );
+		$options['pin_required'] = isset( $input['pin_required'] ) && '' != $input['pin_required'];
 		$options['pin'] = trim( $input['pin'] );
 
 		return $options;

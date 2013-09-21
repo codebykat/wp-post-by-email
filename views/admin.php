@@ -221,9 +221,7 @@
 							<option value="discard" <?php selected( $options['discard_pending'] ); ?>><?php _e( 'Discard them' ); ?></option>
 						</select>
 						<p class="description">
-							<?php _e( "Any messages received from email addresses registered to WordPress users will be posted
-								(set to pending if they don't have the publish posts capability).  For emails that don't match
-								a user in the system, you can choose to skip the message or post it as a pending draft.",
+							<?php _e( "Any messages received from email addresses registered to WordPress users will be posted (set to pending if they don't have the publish posts capability).  For emails that don't match a user in the system, you can choose to skip the message or post it as a pending draft.",
 								'post-by-email' ); ?>
 						</p>
 					</td>

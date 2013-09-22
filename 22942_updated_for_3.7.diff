@@ -422,5 +422,5 @@ index 27290b1..4020a6a 100644
 -}
 -
 -$pop3->quit();
-+do_action('wp-mail.php');
++do_action( 'wp-mail.php' );
 \ No newline at end of file

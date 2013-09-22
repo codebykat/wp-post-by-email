@@ -138,7 +138,7 @@ class Post_By_Email_Admin {
 			$options['pin_required'] = false;
 		}
 
-		if( strpos( $options['pin'], ']' ) ) {
+		if ( strpos( $options['pin'], ']' ) ) {
 			$error_message = __( 'Error: PIN cannot contain shortcode delimiters.', 'post-by-email' );
 			add_settings_error( 'post_by_email_options',
 				'post_by_email_options[mailserver_pin]',
@@ -198,10 +198,11 @@ class Post_By_Email_Admin {
 			array( $this, 'display_plugin_admin_page' )
 		);
 		WP_Screen::get($this->plugin_screen_hook_suffix)->add_help_tab( array(
-			'id'      => 'options-postemail',
-			'title'   => __( 'Post Via Email' ),
-			'content' => '<p>' . __( 'Post via email settings allow you to send your WordPress install an email with the content of your post. You must set up a secret e-mail account with POP3 access to use this, and any mail received at this address will be posted, so it&#8217;s a good idea to keep this address very secret.', 'post-by-email' ) . '</p>',
-		) );
+				'id'      => 'options-postemail',
+				'title'   => __( 'Post Via Email' ),
+				'content' => '<p>' . __( 'Post via email settings allow you to send your WordPress install an email with the content of your post. You must set up a secret e-mail account with POP3 access to use this, and any mail received at this address will be posted, so it&#8217;s a good idea to keep this address very secret.', 'post-by-email' ) . '</p>',
+			)
+		);
 	}
 
 	/**
@@ -225,6 +226,13 @@ class Post_By_Email_Admin {
 			return;
 
 		wp_enqueue_script( 'post-by-email-admin-js', plugins_url( 'js/admin.js', __FILE__ ), 'jquery', '', true );
+
+		// add nonces
+		$nonces = array(
+			'logNonce' => wp_create_nonce( 'post-by-email-clear-log' ),
+			'pinNonce' => wp_create_nonce( 'post-by-email-generate-pin' ),
+		);
+		wp_localize_script( 'post-by-email-admin-js', 'PostByEmailNonces', $nonces );
 	}
 
 	/**

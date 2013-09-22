@@ -287,8 +287,3 @@
 		<?php endif; ?>
 	</div>
 </div>
-
-<script type="text/javascript">
-	var logNonce = "<?php echo wp_create_nonce( 'post-by-email-clear-log' ); ?>";
-	var pinNonce = "<?php echo wp_create_nonce( 'post-by-email-generate-pin' ); ?>";
-</script>

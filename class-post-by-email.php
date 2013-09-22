@@ -225,7 +225,8 @@ class Post_By_Email {
 		$last_checked = get_transient( 'mailserver_last_checked' );
 
 		if ( $last_checked && ! WP_DEBUG ) {
-			$log_message = __( 'Please wait at least five minutes to check mail again!', 'post-by-email' );
+			$time_diff = __( human_time_diff( time(), time() + WP_MAIL_INTERVAL ), 'post-by-email' );
+			$log_message = sprintf( __( 'Please wait %s to check mail again!', 'post-by-email' ), $time_diff );
 			$this->save_log_message( $log_message );
 			return;
 		}
@@ -330,7 +331,7 @@ class Post_By_Email {
 				$pin = $this->find_shortcode( 'pin', $post_content );
 				$pin = implode( $pin );
 
-				if( $pin != $options['pin'] ) {
+				if ( $pin != $options['pin'] ) {
 					// security check failed - move on to the next message
 					$log_message .= '<br />"' . $post_title . '" ' . __( 'failed PIN authentication; discarding.', 'post-by-email' );
 					continue;
@@ -353,7 +354,7 @@ class Post_By_Email {
 					$post_category[] = $term->term_id;
 				} else {  // create new category
 					$new_category = wp_insert_term( $cat, 'category' );
-					if( $new_category ) {
+					if ( $new_category ) {
 						$post_category[] = $new_category['term_id'];
 					}
 				}
@@ -391,7 +392,7 @@ class Post_By_Email {
 			// get all registered custom taxonomies
 			$args = array(
 				'public'   => true,
-				'_builtin' => false
+				'_builtin' => false,
 			);
 			$registered_taxonomies = get_taxonomies( $args, 'names', 'and' ); 
 
@@ -412,7 +413,7 @@ class Post_By_Email {
 				// add gallery to posts with attachments
 				$post_info = array(
 					'ID' => $post_ID,
-					'post_content' => $post_content . '[gallery]'
+					'post_content' => $post_content . '[gallery]',
 				);
 				wp_update_post( $post_info );
 			}
@@ -534,8 +535,9 @@ class Post_By_Email {
 		$headerquery = new Horde_Imap_Client_Fetch_Query();
 		$headerquery->headerText( array() );
 		$headerlist = $this->connection->fetch( 'INBOX', $headerquery, array(
-			'ids' => $uid
-		));
+				'ids' => $uid,
+			)
+		);
 
 		$headers = $headerlist->first()->getHeaderText( 0, Horde_Imap_Client_Data_Fetch::HEADER_PARSE );
 		return $headers;
@@ -626,8 +628,9 @@ class Post_By_Email {
 		$query->structure();
 
 		$list = $this->connection->fetch( 'INBOX', $query, array(
-			'ids' => $uid
-		));
+				'ids' => $uid,
+			)
+		);
 
 		$part = $list->first()->getStructure();
 		$body_id = $part->findBody('html');
@@ -638,13 +641,15 @@ class Post_By_Email {
 
 		$query2 = new Horde_Imap_Client_Fetch_Query();
 		$query2->bodyPart( $body_id, array(
-			'decode' => true,
-			'peek' => true
-		));
+				'decode' => true,
+				'peek' => true,
+			)
+		);
 
 		$list2 = $this->connection->fetch( 'INBOX', $query2, array(
-			'ids' => $uid
-		));
+				'ids' => $uid,
+			)
+		);
 
 		$message2 = $list2->first();
 		$content = $message2->getBodyPart( $body_id );
@@ -675,8 +680,9 @@ class Post_By_Email {
 		$query->structure();
 
 		$list = $this->connection->fetch( 'INBOX', $query, array(
-			'ids' => $uid
-		));
+				'ids' => $uid,
+			)
+		);
 
 		$part = $list->first()->getStructure();
 		$map = $part->ContentTypeMap();
@@ -694,13 +700,15 @@ class Post_By_Email {
 
 				$query2 = new Horde_Imap_Client_Fetch_Query();
 				$query2->bodyPart( $mime_id, array(
-					'decode' => true,
-					'peek' => true
-				));
+						'decode' => true,
+						'peek' => true,
+					)
+				);
 
 				$list2 = $this->connection->fetch( 'INBOX', $query2, array(
-					'ids' => $uid
-				));
+						'ids' => $uid,
+					)
+				);
 
 				$message = $list2->first();
 
@@ -756,9 +764,10 @@ class Post_By_Email {
 
 		try {
 			$this->connection->store( 'INBOX', array(
-				'add' => array( $flag ),
-				'ids' => $uids
-			) );
+					'add' => array( $flag ),
+					'ids' => $uids,
+				)
+			);
 		}
 		catch ( Horde_Imap_Client_Exception $e ) {
 			$this->save_error_message( __( 'An error occurred: ', 'post-by-email' ) . $e->getMessage() );
@@ -798,7 +807,7 @@ class Post_By_Email {
 		// get all registered custom taxonomies
 		$args = array(
 			'public'   => true,
-			'_builtin' => false
+			'_builtin' => false,
 		);
 		$registered_taxonomies = get_taxonomies( $args, 'names', 'and' );
 
@@ -835,7 +844,11 @@ class Post_By_Email {
 	protected function save_log_message( $message, $error=false ) {
 		$log = get_option( 'post_by_email_log', array() );
 
-		array_unshift( $log, array( 'timestamp'=>current_time( 'timestamp' ), 'message'=>$message ) );
+		array_unshift( $log, array(
+				'timestamp' => current_time( 'timestamp' ),
+				'message' => $message,
+			)
+		);
 
 		update_option( 'post_by_email_log', $log );
 

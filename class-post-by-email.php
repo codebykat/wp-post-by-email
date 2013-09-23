@@ -24,7 +24,7 @@ class Post_By_Email {
 	 *
 	 * @var     string
 	 */
-	protected $version = '1.0.3';
+	protected $version = '1.0.4';
 
 	/**
 	 * Unique identifier for the plugin.
@@ -244,9 +244,17 @@ class Post_By_Email {
 		$options['status'] = '';
 		update_option( 'post_by_email_options', $options );
 
-		$this->connection = $this->open_mailbox_connection( $options );
+		$connection_options = array(
+			'username' => $options['mailserver_login'],
+			'password' => $options['mailserver_pass'],
+			'hostspec' => $options['mailserver_url'],
+			'port' => $options['mailserver_port'],
+			'secure' => $options['ssl'] ? 'ssl' : false,
+		);
 
-		if (! $this->connection ) {
+		$this->connection = $this->open_mailbox_connection( $connection_options );
+
+		if ( ! $this->connection ) {
 			return;
 		}
 
@@ -254,7 +262,7 @@ class Post_By_Email {
 
 		if ( 0 === sizeof( $uids ) ) {
 			$this->save_log_message( __( 'There doesn&#8217;t seem to be any new mail.', 'post-by-email' ) );
-			$this->connection->shutdown();
+			$this->close_connection();
 			return;
 		}
 
@@ -444,7 +452,7 @@ class Post_By_Email {
 		// mark all processed emails as read
 		$this->mark_as_read( $uids, $options['delete_messages'] );
 
-		$this->connection->shutdown();
+		$this->close_connection();
 	}
 
 	/**
@@ -470,21 +478,13 @@ class Post_By_Email {
 	 *
 	 * @return   object
 	 */
-	protected function open_mailbox_connection( $options ) {
-		$connection_options = array(
-			'username' => $options['mailserver_login'],
-			'password' => $options['mailserver_pass'],
-			'hostspec' => $options['mailserver_url'],
-			'port' => $options['mailserver_port'],
-			'secure' => $options['ssl'] ? 'ssl' : false,
-		);
-
+	protected function open_mailbox_connection( $connection_options ) {
 		if ( 'POP3' == $options['mailserver_protocol'] ) {
-			$connection = new Horde_Imap_Client_Socket_Pop3( $connection_options );
 			$this->protocol = 'POP3';
+			$connection = new Horde_Imap_Client_Socket_Pop3( $connection_options );
 		} else {  // IMAP
-			$connection = new Horde_Imap_Client_Socket( $connection_options );
 			$this->protocol = 'IMAP';
+			$connection = new Horde_Imap_Client_Socket( $connection_options );
 		}
 		$connection->_setInit( 'authmethod', 'USER' );
 
@@ -497,6 +497,15 @@ class Post_By_Email {
 		}
 
 		return $connection;
+	}
+
+	/**
+	* Closes the connection to the mailserver.
+	*
+	* @since    1.0.4
+	*/
+	protected function close_connection() {
+		$this->connection->shutdown();
 	}
 
 	/**

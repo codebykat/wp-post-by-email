@@ -3,6 +3,7 @@ Contributors: codebykat
 Tags: post-by-email, email
 Requires at least: 3.6
 Tested up to: 3.7
+Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -96,7 +97,7 @@ This probably means you're trying to connect to a POP3 server over the IMAP port
 
 == Testing ==
 
-### Automated Tests ###
+= Automated Tests =
 
 Like WordPress Core, this plugin includes automated unit tests written in PHPUnit.
 
@@ -105,15 +106,14 @@ To run the unit tests:
 1. Set up the WordPress testing library as described in [Handbook: Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).
 1. From the plugin directory, run `WP_TESTS_DIR=/path/to/WordPress/test/install phpunit`
 
-### Manual Testing ###
+= Manual Testing =
 
 1. Set up a test email address (services such as Gmail work great for this) and enable IMAP or POP3 access.  (Refer to <a href="http://wordpress.org/plugins/post-by-email/installation/">Installation</a> for detailed instructions.)
 1. Verify that you are using the correct mailbox settings by using a third-party email client, such as Outlook or OSX Mail.app, to connect to your test mailbox.
 1. Enter those settings into the Post By Email settings and save them.
 1. Navigate to the "Activity Log" tab and press the "Check Now" button.  When the page reloads, you should see a new entry in the log file describing the results of the mail check.
 
-**Caveat**  
-There is sometimes a delay between sending an email and having it show up in the mailbox, especially with POP3.  If you're using IMAP, you can connect using a third-party mail client to verify that messages have been received, then mark them as unread so Post By Email will pick them up.
+**Caveat:** There is sometimes a delay between sending an email and having it show up in the mailbox, especially with POP3.  If you're using IMAP, you can connect using a third-party mail client to verify that messages have been received, then mark them as unread so Post By Email will pick them up.
 
 
 == Reporting Bugs ==
@@ -123,7 +123,7 @@ Before reporting a bug, make sure you've updated the plugin to the latest versio
 Then, provide as much of the following information as possible:
 
 1. WordPress version (e.g. 3.6.x).
-1. Plugin version (e.g. 1.0.3).
+1. Plugin version (e.g. 1.0.4).
 1. PHP version (e.g. 5.2.x or 5.3.x).
 1. Your mailbox settings (URL, protocol, port and whether SSL is enabled; not your login and password).
 1. Any error messages displayed (it might help to <a href="http://codex.wordpress.org/WP_DEBUG">enable WP_DEBUG</a> in your wp-config.php).
@@ -136,6 +136,7 @@ Then, provide as much of the following information as possible:
 * Added screenshots, expanded Readme and contextual help.
 * Added support for user-included gallery shortcode (allows use of WP's gallery options).
 * Added warning when checking email before changed settings have been saved.
+* Added more unit tests.
 * Code style fixes as per http://gsoc.trac.wordpress.org/ticket/377
 * Fixed https://github.com/codebykat/wp-post-by-email/issues/3
 

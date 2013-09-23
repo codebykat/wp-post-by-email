@@ -126,7 +126,7 @@ Before reporting a bug, make sure you've updated the plugin to the latest versio
 Then, provide as much of the following information as possible:
 
 1. WordPress version (e.g. 3.6.x).
-1. Plugin version (e.g. 1.0.3).
+1. Plugin version (e.g. 1.0.4).
 1. PHP version (e.g. 5.2.x or 5.3.x).
 1. Your mailbox settings (URL, protocol, port and whether SSL is enabled; not your login and password).
 1. Any error messages displayed (it might help to <a href="http://codex.wordpress.org/WP_DEBUG">enable WP_DEBUG</a> in your wp-config.php).
@@ -139,6 +139,7 @@ Then, provide as much of the following information as possible:
 * Added screenshots, expanded Readme and contextual help.
 * Added support for user-included gallery shortcode (allows use of WP's gallery options).
 * Added warning when checking email before changed settings have been saved.
+* Added more unit tests.
 * Code style fixes as per http://gsoc.trac.wordpress.org/ticket/377
 * Fixed https://github.com/codebykat/wp-post-by-email/issues/3
 

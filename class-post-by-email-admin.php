@@ -233,9 +233,9 @@ class Post_By_Email_Admin {
 		}
 		$screen->set_help_sidebar(
 			'<p><strong>' . __( 'For more information:', 'post-by-email' ) . '</strong></p>' .
-			'<p>' . __( '<a href="http://wordpress.org/plugins/post-by-email/installation" target="_blank">Installation</a>', 'post-by-email' ) . '</p>' .
-			'<p>' . __( '<a href="http://wordpress.org/plugins/post-by-email/" target="_blank">Usage</a>', 'post-by-email' ) . '</p>' .
-			'<p>' . __( '<a href="http://wordpress.org/support/plugin/post-by-email" target="_blank">Support Forums</a>', 'post-by-email' ) . '</p>'
+			'<p><a href="http://wordpress.org/plugins/post-by-email/installation" target="_blank">' . __( 'Installation', 'post-by-email' ) . '</a></p>' .
+			'<p><a href="http://wordpress.org/plugins/post-by-email/" target="_blank">' . __( 'Usage', 'post-by-email' ) . '</a></p>' .
+			'<p><a href="http://wordpress.org/support/plugin/post-by-email" target="_blank">' . __( 'Support Forums', 'post-by-email' ) . '</a></p>'
 		);
 	}
 

@@ -10,40 +10,136 @@ Create new posts on your WordPress blog by sending email to a specific email add
 
 ## Description ##
 
-**Warning:** This plugin is currently a very early beta!  Use at your own risk and please report any bugs, either on the [WordPress Support forums](http://wordpress.org/support/plugin/post-by-email) or via the [Github issues page](https://github.com/codebykat/wp-post-by-email/issues).
+**Warning:** This plugin is currently in beta!  Use at your own risk and please report any bugs, either on the [WordPress Support forums](http://wordpress.org/support/plugin/post-by-email) or via the [Github issues page](https://github.com/codebykat/wp-post-by-email/issues).
 
-Any new messages sent to the configured email address will be posted to the blog.  This plugin replaces the functionality that used to live in core.
+Any new messages sent to the configured email address will be posted to the blog.  This plugin replaces the functionality that used to live in WordPress core.
+
+Once an email has been successfully posted to the blog, it can either be marked as read (IMAP servers only) or deleted from the mailbox.
+
+Updates on the project can be found on the [Make WordPress Core blog](http://make.wordpress.org/core/tag/post-by-email/).
+
+
+**Features**
+* Supports IMAP or POP3 servers, with or without SSL
+* Optional PIN-based authentication guards against email spoofing
+* Uses WordPress's built-in roles to manage which users can post
+* Set categories, tags and custom taxonomies by including shortcodes in your email
+* Email attachments will automatically be added to the post's gallery
+* Emails from unauthorized users can be either set as pending or discarded
+
+### Post Authors and Security ###
 
 The "From" address is matched to WordPress users in the database to determine the post's author.  If the author doesn't have an account or isn't allowed to publish posts, the post status will be set to "pending".
 
-Once an email has been successfully posted to the blog, it will either be marked as read (IMAP servers only) or deleted from the mailbox.
+By default, any users in the Author, Editor or Administrator roles are able to publish posts.  Use the Users menu item in the admin dashboard to view and manage which users have this capability.  For more information on the WordPress permissions system, see <a href="http://codex.wordpress.org/Roles_and_Capabilities">Codex: Roles and Capabilities</a>.
 
-You can set categories, tags and custom taxonomy terms on your posts by including shortcodes in your email.  These should be space-separated.  Use slugs for tags (and non-hierarchical taxonomies) and either slugs or IDs for categories (/ hierarchical taxonomies).  Terms that do not yet exist will be created.  Examples:
+### Shortcodes ###
+
+By default, emailed posts will be placed in the default category configured in the settings.
+
+You can also set the categories, tags and custom taxonomy terms on your posts by including shortcodes in your email.  These should be space-separated.  Use slugs for tags (and non-hierarchical taxonomies) and either slugs or IDs for categories (/ hierarchical taxonomies).  Terms that do not yet exist will be created.  Examples:
+
+*Categories:* Use either slugs or IDs.
 `[category posted-by-email another-category]`
-`[tag cool-stuff]`
 `[category 14]`
+
+*Tags:* Use slugs:
+`[tag cool-stuff]`
+
+*Custom Taxonomies:* Use slugs for non-hierarchical taxonomies, and IDs for hierarchical.
 `[custom-taxonomy-name thing1 thing2]`
 `[another-custom-taxonomy 2 3 5]`
 
-Updates on the project can be found on the [Make WordPress Core blog](http://make.wordpress.org/core/tag/post-by-email/).
+### Attachments ###
+
+Any files attached to an email will be uploaded to the Media Library and added to the post as a gallery.  You can specify gallery options, or its location within the post, by including a <a href="http://codex.wordpress.org/Gallery_Shortcode">gallery shortcode</a> in your email.  If no gallery shortcode exists, it will be added to the end of the post.
+
 
 ## Installation ##
 
 1. See [Installing Plugins](http://codex.wordpress.org/Managing_Plugins#Installing_Plugins).
+1. Set up an email address that will be used specifically to receive messages for your blog.
+1. Make sure your email service is configured to allow external connections via POP3 or IMAP.
 1. Activate the plugin through the 'Plugins' menu.
-1. Configure mailbox information under plugin settings.
+1. Configure mailbox information under Tools->Post By Email.
+
+### Instructions for specific email services ###
+
+*** Gmail:** <a href="https://support.google.com/mail/troubleshooter/1668960?hl=en">This page</a> will walk you through enabling IMAP or POP3 access.  When prompted to select an email client for configuration instructions, select "Other" to view the settings.  
+
+*** Yahoo! Mail:** Use these <a href="http://help.yahoo.com/kb/index?page=content&id=SLN4075">IMAP settings</a>; IMAP access should be enabled by default.  Mail Plus subscribers can also use these <a href="http://help.yahoo.com/kb/index?locale=en_US&y=PROD_MAIL_ML&page=content&id=SLN4724">POP3 settings</a>.  
+
+* Outlook.com (Hotmail) settings and instructions can be found on <a href="http://windows.microsoft.com/en-ca/windows/outlook/send-receive-from-app">this page</a>.
 
 
-## Tests ##
+## Frequently Asked Questions ##
 
-Like WordPress Core, this plugin includes unit tests written in PHPUnit.
+### What timestamp will be used for posts? ###
+Posts will be backdated to use the date and time they were received by the mailserver, NOT the time they were imported by the plugin.
 
-To run the tests:
+### Will messages show up on my blog as soon as I send them? ###
+No, emails are not "forwarded" to your blog.  Just like any third-party mail client, Post By Email has to check for new messages, and will only do this once per hour (or when you click the "Check Now" button in the settings).  In addition, because of how WordPress' task scheduling (wp_cron) works, this check will only be triggered when a page on your blog has been loaded.  There is also sometimes a delay between when messages are sent and when they show up in the mailbox, especially with POP3 access.
 
-1. Set up the WordPress testing library as described in [Handbook: Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).  
+### I found a bug! ###
+Oh no!  I would like to know as much as possible about it so that I can fix it.  For the information to include with a bug report, please see the Reporting Bugs section in <a href="http://wordpress.org/plugins/post-by-email/other_notes/">Other Notes</a>.
+
+### What does the error "Bad tagged response" mean? ###
+This probably means you're trying to connect to a POP3 server over the IMAP port, or vice versa.  Double-check your server URL, protocol and port number and try again.
+
+
+## Screenshots ##
+###1. Main settings page###
+![Main settings page](http://s.wordpress.org/extend/plugins/post-by-email/screenshot-1.png)
+
+###2. The activity log###
+![The activity log](http://s.wordpress.org/extend/plugins/post-by-email/screenshot-2.png)
+
+
+
+## Testing ##
+
+### Automated Tests ###
+
+Like WordPress Core, this plugin includes automated unit tests written in PHPUnit.
+
+To run the unit tests:
+
+**1. Set up the WordPress testing library as described in [Handbook:** Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).  
 1. From the plugin directory, run `WP_TESTS_DIR=/path/to/WordPress/test/install phpunit`
 
+### Manual Testing ###
+
+1. Set up a test email address (services such as Gmail work great for this) and enable IMAP or POP3 access.  (Refer to <a href="http://wordpress.org/plugins/post-by-email/installation/">Installation</a> for detailed instructions.)
+1. Verify that you are using the correct mailbox settings by using a third-party email client, such as Outlook or OSX Mail.app, to connect to your test mailbox.
+1. Enter those settings into the Post By Email settings and save them.
+1. Navigate to the "Activity Log" tab and press the "Check Now" button.  When the page reloads, you should see a new entry in the log file describing the results of the mail check.
+
+**Caveat**
+There is sometimes a delay between sending an email and having it show up in the mailbox, especially with POP3.  If you're using IMAP, you can connect using a third-party mail client to verify that messages have been received, then mark them as unread so Post By Email will pick them up.
+
+
+## Reporting Bugs ##
+
+Before reporting a bug, make sure you've updated the plugin to the latest version.
+
+Then, provide as much of the following information as possible:
+
+1. WordPress version (e.g. 3.6.x).
+1. Plugin version (e.g. 1.0.3).
+1. PHP version (e.g. 5.2.x or 5.3.x).
+1. Your mailbox settings (URL, protocol, port and whether SSL is enabled; not your login and password).
+1. Any error messages displayed (it might help to <a href="http://codex.wordpress.org/WP_DEBUG">enable WP_DEBUG</a> in your wp-config.php).
+1. If the issue is related to a specific email, the full email, including headers.  Feel free to replace any personal information with dummy text (such as "sender@example.com").  <a href="https://support.google.com/groups/answer/75960?hl=en">This link</a> has instructions for viewing full message headers in Gmail, Outlook and Yahoo.
+
+
 ## Changelog ##
+
+### 1.0.4 ###
+* Added screenshots, expanded Readme and contextual help.
+* Added support for user-included gallery shortcode (allows use of WP's gallery options).
+* Added warning when checking email before changed settings have been saved.
+* Code style fixes as per http://gsoc.trac.wordpress.org/ticket/377
+* Fixed https://github.com/codebykat/wp-post-by-email/issues/3
 
 ### 1.0.3 ###
 * Added option to choose what to do when message senders don't match WP users (discard or set to pending).

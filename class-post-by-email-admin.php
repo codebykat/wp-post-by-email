@@ -25,6 +25,30 @@ class Post_By_Email_Admin {
 	}
 
 	/**
+	* Help tabs for the settings page.
+	*
+	* @since    1.0.4
+	*/
+	public static $help_tabs = array(
+		'post-by-email' => array(
+			'title'   => 'Post By Email',
+			'content' => 'Post By Email allows you to send your WordPress site an email with the content of your post. You must set up a special-purpose e-mail account with IMAP or POP3 access to use this, and any mail received at this address will be posted, so it&#8217;s a good idea to keep this address very secret.</p><p>For detailed installation and configuration instructions, see the links to the right.',
+		),
+		'mailserver' => array(
+				'title'   => 'Mailbox Settings',
+				'content' => 'If you&#8217;re not sure what to put here and the defaults don&#8217;t work, ask your email provider for the correct settings.  Here are links to the settings for some common email providers:<li><a href="https://support.google.com/mail/troubleshooter/1668960?hl=en">Gmail</a></li><li><a href="http://help.yahoo.com/kb/index?page=content&id=SLN4075">Yahoo</a></li><li><a href="http://windows.microsoft.com/en-ca/windows/outlook/send-receive-from-app">Outlook.com</a></li>Note that you might also have to enable POP/IMAP access via your email provider.',
+		),
+		'security' => array(
+				'title'  => 'Security',
+				'content' => 'If you&#8217ve set a PIN for authentication, you will need to specify it somewhere in your email message using the following shortcode:<p><kbd>[pin abc123]</kbd><p>(Replace abc123 with the PIN you chose.)</p><p>Mail that doe not contain this PIN will be discarded!',
+		),
+		'shortcodes' => array(
+				'title'    => 'Shortcodes',
+				'content'  => 'You can specify categories, tags and custom taxonomy terms in your email by including shortcodes.  If no categories or tags are specified, the post will be created in the default category.</p><p>You can also include a gallery shortcode to specify gallery options for any attachments.</p><p>Shortcode examples can be found on the <a href="http://wordpress.org/plugins/post-by-email/">plugin page</a>.',
+		),
+	);
+
+	/**
 	 * Hook up our functions to the admin menus.
 	 *
 	 * @since     0.9.6
@@ -197,12 +221,34 @@ class Post_By_Email_Admin {
 			'post-by-email',
 			array( $this, 'display_plugin_admin_page' )
 		);
-		WP_Screen::get($this->plugin_screen_hook_suffix)->add_help_tab( array(
-				'id'      => 'options-postemail',
-				'title'   => __( 'Post Via Email' ),
-				'content' => '<p>' . __( 'Post via email settings allow you to send your WordPress install an email with the content of your post. You must set up a secret e-mail account with POP3 access to use this, and any mail received at this address will be posted, so it&#8217;s a good idea to keep this address very secret.', 'post-by-email' ) . '</p>',
-			)
+		$screen = WP_Screen::get( $this->plugin_screen_hook_suffix);
+		foreach ( self::$help_tabs as $id => $data ) {
+			$screen->add_help_tab( array(
+					'id'       => $id,
+					'title'    => __( $data['title'], 'post-by-email' ),
+					'content'  => '',
+					'callback' => array( $this, 'show_help_tabs' )
+				)
+			);
+		}
+		$screen->set_help_sidebar(
+			'<p><strong>' . __( 'For more information:', 'post-by-email' ) . '</strong></p>' .
+			'<p>' . __( '<a href="http://wordpress.org/plugins/post-by-email/installation" target="_blank">Installation</a>', 'post-by-email' ) . '</p>' .
+			'<p>' . __( '<a href="http://wordpress.org/plugins/post-by-email/" target="_blank">Usage</a>', 'post-by-email' ) . '</p>' .
+			'<p>' . __( '<a href="http://wordpress.org/support/plugin/post-by-email" target="_blank">Support Forums</a>', 'post-by-email' ) . '</p>'
 		);
+	}
+
+	/**
+	* Prints out the content for the contextual help tabs.
+	*
+	* @since    1.0.4
+	*/
+	public function show_help_tabs( $screen, $tab ) {
+		printf(
+				'<p>%s</p>',
+				__( $tab['callback'][0]::$help_tabs[ $tab['id'] ]['content'], 'post-by-email' )
+			);
 	}
 
 	/**

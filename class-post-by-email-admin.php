@@ -247,7 +247,7 @@ class Post_By_Email_Admin {
 	public function show_help_tabs( $screen, $tab ) {
 		printf(
 				'<p>%s</p>',
-				__( $tab['callback'][0]::$help_tabs[ $tab['id'] ]['content'], 'post-by-email' )
+				__( self::$help_tabs[ $tab['id'] ]['content'], 'post-by-email' )
 			);
 	}
 

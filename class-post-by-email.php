@@ -479,6 +479,7 @@ class Post_By_Email {
 	 * @return   object
 	 */
 	protected function open_mailbox_connection( $connection_options ) {
+		$options = get_option( 'post_by_email_options' );
 		if ( 'POP3' == $options['mailserver_protocol'] ) {
 			$this->protocol = 'POP3';
 			$connection = new Horde_Imap_Client_Socket_Pop3( $connection_options );

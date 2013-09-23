@@ -39,15 +39,15 @@ By default, emailed posts will be placed in the default category configured in t
 
 You can also set the categories, tags and custom taxonomy terms on your posts by including shortcodes in your email.  These should be space-separated.  Use slugs for tags (and non-hierarchical taxonomies) and either slugs or IDs for categories (/ hierarchical taxonomies).  Terms that do not yet exist will be created.  Examples:
 
-*Categories:* Use either slugs or IDs.
-`[category posted-by-email another-category]`
+**Categories:** Use either slugs or IDs.  
+`[category posted-by-email another-category]`  
 `[category 14]`
 
-*Tags:* Use slugs:
+**Tags:** Use slugs.  
 `[tag cool-stuff]`
 
-*Custom Taxonomies:* Use slugs for non-hierarchical taxonomies, and IDs for hierarchical.
-`[custom-taxonomy-name thing1 thing2]`
+**Custom Taxonomies:** Use slugs for non-hierarchical taxonomies, and IDs for hierarchical.  
+`[custom-taxonomy-name thing1 thing2]`  
 `[another-custom-taxonomy 2 3 5]`
 
 ### Attachments ###
@@ -65,11 +65,11 @@ Any files attached to an email will be uploaded to the Media Library and added t
 
 ### Instructions for specific email services ###
 
-* Gmail: <a href="https://support.google.com/mail/troubleshooter/1668960?hl=en">This page</a> will walk you through enabling IMAP or POP3 access.  When prompted to select an email client for configuration instructions, select "Other" to view the settings.
+- Gmail: <a href="https://support.google.com/mail/troubleshooter/1668960?hl=en">This page</a> will walk you through enabling IMAP or POP3 access.  When prompted to select an email client for configuration instructions, select "Other" to view the settings.
 
-* Yahoo! Mail: Use these <a href="http://help.yahoo.com/kb/index?page=content&id=SLN4075">IMAP settings</a>; IMAP access should be enabled by default.  Mail Plus subscribers can also use these <a href="http://help.yahoo.com/kb/index?locale=en_US&y=PROD_MAIL_ML&page=content&id=SLN4724">POP3 settings</a>.
+- Yahoo! Mail: Use these <a href="http://help.yahoo.com/kb/index?page=content&id=SLN4075">IMAP settings</a>; IMAP access should be enabled by default.  Mail Plus subscribers can also use these <a href="http://help.yahoo.com/kb/index?locale=en_US&y=PROD_MAIL_ML&page=content&id=SLN4724">POP3 settings</a>.
 
-* Outlook.com (Hotmail) settings and instructions can be found on <a href="http://windows.microsoft.com/en-ca/windows/outlook/send-receive-from-app">this page</a>.
+- Outlook.com (Hotmail) settings and instructions can be found on <a href="http://windows.microsoft.com/en-ca/windows/outlook/send-receive-from-app">this page</a>.
 
 
 == Frequently Asked Questions ==
@@ -110,7 +110,7 @@ To run the unit tests:
 1. Enter those settings into the Post By Email settings and save them.
 1. Navigate to the "Activity Log" tab and press the "Check Now" button.  When the page reloads, you should see a new entry in the log file describing the results of the mail check.
 
-**Caveat**
+**Caveat**  
 There is sometimes a delay between sending an email and having it show up in the mailbox, especially with POP3.  If you're using IMAP, you can connect using a third-party mail client to verify that messages have been received, then mark them as unread so Post By Email will pick them up.
 
 

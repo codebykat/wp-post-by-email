@@ -39,15 +39,15 @@ By default, emailed posts will be placed in the default category configured in t
 
 You can also set the categories, tags and custom taxonomy terms on your posts by including shortcodes in your email.  These should be space-separated.  Use slugs for tags (and non-hierarchical taxonomies) and either slugs or IDs for categories (/ hierarchical taxonomies).  Terms that do not yet exist will be created.  Examples:
 
-*Categories:* Use either slugs or IDs.
-`[category posted-by-email another-category]`
+**Categories:** Use either slugs or IDs.  
+`[category posted-by-email another-category]`  
 `[category 14]`
 
-*Tags:* Use slugs:
+**Tags:** Use slugs.  
 `[tag cool-stuff]`
 
-*Custom Taxonomies:* Use slugs for non-hierarchical taxonomies, and IDs for hierarchical.
-`[custom-taxonomy-name thing1 thing2]`
+**Custom Taxonomies:** Use slugs for non-hierarchical taxonomies, and IDs for hierarchical.  
+`[custom-taxonomy-name thing1 thing2]`  
 `[another-custom-taxonomy 2 3 5]`
 
 ### Attachments ###
@@ -65,11 +65,11 @@ Any files attached to an email will be uploaded to the Media Library and added t
 
 ### Instructions for specific email services ###
 
-*** Gmail:** <a href="https://support.google.com/mail/troubleshooter/1668960?hl=en">This page</a> will walk you through enabling IMAP or POP3 access.  When prompted to select an email client for configuration instructions, select "Other" to view the settings.  
+- Gmail: <a href="https://support.google.com/mail/troubleshooter/1668960?hl=en">This page</a> will walk you through enabling IMAP or POP3 access.  When prompted to select an email client for configuration instructions, select "Other" to view the settings.  
 
-*** Yahoo! Mail:** Use these <a href="http://help.yahoo.com/kb/index?page=content&id=SLN4075">IMAP settings</a>; IMAP access should be enabled by default.  Mail Plus subscribers can also use these <a href="http://help.yahoo.com/kb/index?locale=en_US&y=PROD_MAIL_ML&page=content&id=SLN4724">POP3 settings</a>.  
+- Yahoo! Mail: Use these <a href="http://help.yahoo.com/kb/index?page=content&id=SLN4075">IMAP settings</a>; IMAP access should be enabled by default.  Mail Plus subscribers can also use these <a href="http://help.yahoo.com/kb/index?locale=en_US&y=PROD_MAIL_ML&page=content&id=SLN4724">POP3 settings</a>.  
 
-* Outlook.com (Hotmail) settings and instructions can be found on <a href="http://windows.microsoft.com/en-ca/windows/outlook/send-receive-from-app">this page</a>.
+- Outlook.com (Hotmail) settings and instructions can be found on <a href="http://windows.microsoft.com/en-ca/windows/outlook/send-receive-from-app">this page</a>.
 
 
 ## Frequently Asked Questions ##
@@ -81,7 +81,7 @@ Posts will be backdated to use the date and time they were received by the mails
 No, emails are not "forwarded" to your blog.  Just like any third-party mail client, Post By Email has to check for new messages, and will only do this once per hour (or when you click the "Check Now" button in the settings).  In addition, because of how WordPress' task scheduling (wp_cron) works, this check will only be triggered when a page on your blog has been loaded.  There is also sometimes a delay between when messages are sent and when they show up in the mailbox, especially with POP3 access.
 
 ### I found a bug! ###
-Oh no!  I would like to know as much as possible about it so that I can fix it.  For the information to include with a bug report, please see the Reporting Bugs section in <a href="http://wordpress.org/plugins/post-by-email/other_notes/">Other Notes</a>.
+Oh no!  I would like to know as much as possible about it so that I can fix it.  For the information to include with a bug report, please see <a href="#reporting-bugs">Reporting Bugs</a>.
 
 ### What does the error "Bad tagged response" mean? ###
 This probably means you're trying to connect to a POP3 server over the IMAP port, or vice versa.  Double-check your server URL, protocol and port number and try again.
@@ -104,7 +104,7 @@ Like WordPress Core, this plugin includes automated unit tests written in PHPUni
 
 To run the unit tests:
 
-**1. Set up the WordPress testing library as described in [Handbook:** Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).  
+1. Set up the WordPress testing library as described in [Handbook: Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).  
 1. From the plugin directory, run `WP_TESTS_DIR=/path/to/WordPress/test/install phpunit`
 
 ### Manual Testing ###
@@ -114,7 +114,7 @@ To run the unit tests:
 1. Enter those settings into the Post By Email settings and save them.
 1. Navigate to the "Activity Log" tab and press the "Check Now" button.  When the page reloads, you should see a new entry in the log file describing the results of the mail check.
 
-**Caveat**
+**Caveat**  
 There is sometimes a delay between sending an email and having it show up in the mailbox, especially with POP3.  If you're using IMAP, you can connect using a third-party mail client to verify that messages have been received, then mark them as unread so Post By Email will pick them up.
 
 

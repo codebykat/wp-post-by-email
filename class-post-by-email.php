@@ -678,6 +678,9 @@ class Post_By_Email {
 		$content = strip_tags( $content, '<img><p><br><i><b><u><em><strong><strike><font><span><div><style><a>' );
 		$content = trim( $content );
 
+		// fix for &nbsp; which get turned into unicode and destroy everything
+		$content = str_replace( chr( 0xA0 ), ' ', $content );
+
 		return $content;
 	}
 

@@ -1,0 +1,275 @@
+# Copyright (C) 2013 Post By Email
+# This file is distributed under the same license as the Post By Email package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Post By Email 1.0.4\n"
+"Report-Msgid-Bugs-To: http://wordpress.org/tag/post-by-email\n"
+"POT-Creation-Date: 2013-09-23 13:00:26+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2013-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: class-post-by-email-admin.php:119
+msgid "Could not save protocol: must be POP3 or IMAP."
+msgstr ""
+
+#: class-post-by-email-admin.php:131
+msgid "Could not save port number: invalid number."
+msgstr ""
+
+#: class-post-by-email-admin.php:143
+msgid "Could not save default category: category not found."
+msgstr ""
+
+#: class-post-by-email-admin.php:157
+msgid "Please enter a security PIN to enable PIN authentication."
+msgstr ""
+
+#: class-post-by-email-admin.php:166
+msgid "Error: PIN cannot contain shortcode delimiters."
+msgstr ""
+
+#. #-#-#-#-#  plugin.pot (Post By Email 1.0.4)  #-#-#-#-#
+#. Plugin Name of the plugin/theme
+#: class-post-by-email-admin.php:218 class-post-by-email-admin.php:219
+msgid "Post By Email"
+msgstr ""
+
+#: class-post-by-email-admin.php:235
+msgid "For more information:"
+msgstr ""
+
+#: class-post-by-email-admin.php:236
+msgid "Installation"
+msgstr ""
+
+#: class-post-by-email-admin.php:237
+msgid "Usage"
+msgstr ""
+
+#: class-post-by-email-admin.php:238
+msgid "Support Forums"
+msgstr ""
+
+#: class-post-by-email.php:229
+msgid "Please wait %s to check mail again!"
+msgstr ""
+
+#: class-post-by-email.php:264
+msgid "There doesn&#8217;t seem to be any new mail."
+msgstr ""
+
+#: class-post-by-email.php:269
+msgid "Found 1 new message."
+msgid_plural "Found %s new messages."
+msgstr[0] ""
+msgstr[1] ""
+
+#: class-post-by-email.php:300
+msgid "No author match for %s (Subject: %s); skipping."
+msgstr ""
+
+#: class-post-by-email.php:347
+msgid "failed PIN authentication; discarding."
+msgstr ""
+
+#: class-post-by-email.php:438
+msgid "(no title)"
+msgstr ""
+
+#: class-post-by-email.php:443
+msgid " (pending)"
+msgstr ""
+
+#: class-post-by-email.php:446
+msgid "Posted:"
+msgstr ""
+
+#: class-post-by-email.php:496 class-post-by-email.php:535
+#: class-post-by-email.php:789
+msgid "An error occurred: "
+msgstr ""
+
+#: views/admin.php:21
+msgid "Your settings have been saved."
+msgstr ""
+
+#: views/admin.php:29
+msgid "Basic Settings"
+msgstr ""
+
+#: views/admin.php:32
+msgid "Mailbox Details"
+msgstr ""
+
+#: views/admin.php:35
+msgid "Security"
+msgstr ""
+
+#: views/admin.php:38
+msgid "Activity Log"
+msgstr ""
+
+#: views/admin.php:50
+msgid ""
+"To post to WordPress by e-mail you must set up a special-purpose e-mail "
+"account\n"
+"\t\t\t\t\t\twith IMAP or POP3 access. Any mail received at this address will "
+"be posted, so it's\n"
+"\t\t\t\t\t\ta good idea to keep this address very secret.  For an extra "
+"level of security, enable\n"
+"\t\t\t\t\t\tPIN-based authentication under the Security tab."
+msgstr ""
+
+#: views/admin.php:62
+msgid "Mail Server"
+msgstr ""
+
+#: views/admin.php:68
+msgid "The address of the incoming mail server (IMAP or POP3)."
+msgstr ""
+
+#: views/admin.php:75
+msgid "Login Name"
+msgstr ""
+
+#: views/admin.php:85
+msgid "Password"
+msgstr ""
+
+#: views/admin.php:95
+msgid "Default Mail Category"
+msgstr ""
+
+#: views/admin.php:117
+msgid ""
+"Configure the details of your mailbox connection.  The default settings "
+"should work with most email accounts, but if your mail server differs, you "
+"can enter it here."
+msgstr ""
+
+#: views/admin.php:123
+msgid "Protocol"
+msgstr ""
+
+#: views/admin.php:136
+msgid "Port"
+msgstr ""
+
+#: views/admin.php:142
+msgid ""
+"Common port numbers: 143 (IMAP), 993 (IMAP/SSL), 110 (POP3), 995 (POP3/SSL)."
+msgstr ""
+
+#: views/admin.php:149
+msgid "Always use secure connection (SSL)?"
+msgstr ""
+
+#: views/admin.php:159
+msgid "Delete messages after posting?"
+msgstr ""
+
+#: views/admin.php:164
+msgid ""
+"Uncheck this box to mark messages as read instead of deleting (requires "
+"IMAP)."
+msgstr ""
+
+#: views/admin.php:170
+msgid "Reset to Defaults"
+msgstr ""
+
+#: views/admin.php:177
+msgid ""
+"If you do not require a PIN to create a new post, anyone who knows your "
+"email address and the address of your Post By Email inbox will be able to "
+"post to this blog."
+msgstr ""
+
+#: views/admin.php:183
+msgid ""
+"Once you have enabled PIN-based authentication, include the PIN in your "
+"email with a shortcode.  Emails that do not include the correct PIN will be "
+"discarded."
+msgstr ""
+
+#: views/admin.php:187
+msgid "Example:"
+msgstr ""
+
+#: views/admin.php:194
+msgid "Require a PIN to post?"
+msgstr ""
+
+#: views/admin.php:204
+msgid "PIN"
+msgstr ""
+
+#: views/admin.php:209
+msgid "Generate"
+msgstr ""
+
+#: views/admin.php:215
+msgid "What should be done with posts from unrecognized emails?"
+msgstr ""
+
+#: views/admin.php:220
+msgid "Save as drafts"
+msgstr ""
+
+#: views/admin.php:221
+msgid "Discard them"
+msgstr ""
+
+#: views/admin.php:224
+msgid ""
+"Any messages received from email addresses registered to WordPress users "
+"will be posted (set to pending if they don't have the publish posts "
+"capability).  For emails that don't match a user in the system, you can "
+"choose to skip the message or post it as a pending draft."
+msgstr ""
+
+#: views/admin.php:243
+msgid "Last checked for new mail:"
+msgstr ""
+
+#: views/admin.php:251
+msgid "Never"
+msgstr ""
+
+#: views/admin.php:254
+msgid "Next scheduled check:"
+msgstr ""
+
+#: views/admin.php:263
+msgid "Check now"
+msgstr ""
+
+#: views/admin.php:269
+msgid "Clear Log"
+msgstr ""
+
+#: views/admin.php:275
+msgid "Log Messages"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "http://codebykat.wordpress.com"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid ""
+"Create new posts on your WordPress blog by sending email to a specific email "
+"address."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Kat Hagan"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "http://profiles.wordpress.org/codebykat"
+msgstr ""

@@ -19,7 +19,7 @@ Once an email has been successfully posted to the blog, it can either be marked 
 Updates on the project can be found on the [Make WordPress Core blog](http://make.wordpress.org/core/tag/post-by-email/).
 
 
-**Features**
+### Features ###
 
 * Supports IMAP or POP3 servers, with or without SSL
 * Optional PIN-based authentication guards against email spoofing

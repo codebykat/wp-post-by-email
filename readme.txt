@@ -20,6 +20,7 @@ Updates on the project can be found on the [Make WordPress Core blog](http://mak
 
 
 **Features**
+
 * Supports IMAP or POP3 servers, with or without SSL
 * Optional PIN-based authentication guards against email spoofing
 * Uses WordPress's built-in roles to manage which users can post
@@ -88,6 +89,7 @@ This probably means you're trying to connect to a POP3 server over the IMAP port
 
 
 == Screenshots ==
+
 1. Main settings page
 1. The activity log
 

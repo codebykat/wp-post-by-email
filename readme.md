@@ -88,6 +88,7 @@ This probably means you're trying to connect to a POP3 server over the IMAP port
 
 
 ## Screenshots ##
+
 ###1. Main settings page###
 ![Main settings page](http://s.wordpress.org/extend/plugins/post-by-email/screenshot-1.png)
 

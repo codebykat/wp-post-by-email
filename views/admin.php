@@ -39,7 +39,7 @@
 		</a>
 	</h2>
 
-	<form method="post" action="options.php">
+	<form id="post-by-email-options" method="post" action="options.php">
 		<?php settings_fields( 'post_by_email_options' ); ?>
 
 		<?php $options = get_option( 'post_by_email_options' ); ?>
@@ -258,7 +258,7 @@
 			?>
 		</p>
 		<p>
-			<a href="<?php echo add_query_arg( 'check_mail', true ); ?>" class="button-secondary"
+			<a href="<?php echo add_query_arg( 'check_mail', true ); ?>" class="button-secondary" id="post-by-email-check-now"
 				<?php if ( 'unconfigured' == $options['status'] ) { echo 'disabled'; } ?> >
 				<?php _e( 'Check now', 'post-by-email' ); ?>
 			</a>

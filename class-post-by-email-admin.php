@@ -227,12 +227,15 @@ class Post_By_Email_Admin {
 
 		wp_enqueue_script( 'post-by-email-admin-js', plugins_url( 'js/admin.js', __FILE__ ), 'jquery', '', true );
 
-		// add nonces
-		$nonces = array(
+		// add nonces and JS messages
+		$settings_message = "Your settings have not yet been saved.\nChecking mail now will discard your changes.\nAre you sure you want to do this?";
+
+		$vars = array(
 			'logNonce' => wp_create_nonce( 'post-by-email-clear-log' ),
 			'pinNonce' => wp_create_nonce( 'post-by-email-generate-pin' ),
+			'settingsMessage' => __( $settings_message, 'post-by-email' ),
 		);
-		wp_localize_script( 'post-by-email-admin-js', 'PostByEmailNonces', $nonces );
+		wp_localize_script( 'post-by-email-admin-js', 'PostByEmailVars', $vars );
 	}
 
 	/**

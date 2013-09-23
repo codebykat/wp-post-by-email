@@ -19,7 +19,7 @@ Once an email has been successfully posted to the blog, it can either be marked 
 Updates on the project can be found on the [Make WordPress Core blog](http://make.wordpress.org/core/tag/post-by-email/).
 
 
-== Features ==
+= Features =
 
 * Supports IMAP or POP3 servers, with or without SSL
 * Optional PIN-based authentication guards against email spoofing
@@ -28,13 +28,13 @@ Updates on the project can be found on the [Make WordPress Core blog](http://mak
 * Email attachments will automatically be added to the post's gallery
 * Emails from unauthorized users can be either set as pending or discarded
 
-### Post Authors and Security ###
+= Post Authors and Security =
 
 The "From" address is matched to WordPress users in the database to determine the post's author.  If the author doesn't have an account or isn't allowed to publish posts, the post status will be set to "pending".
 
 By default, any users in the Author, Editor or Administrator roles are able to publish posts.  Use the Users menu item in the admin dashboard to view and manage which users have this capability.  For more information on the WordPress permissions system, see <a href="http://codex.wordpress.org/Roles_and_Capabilities">Codex: Roles and Capabilities</a>.
 
-### Shortcodes ###
+= Shortcodes =
 
 By default, emailed posts will be placed in the default category configured in the settings.
 
@@ -51,7 +51,7 @@ You can also set the categories, tags and custom taxonomy terms on your posts by
 `[custom-taxonomy-name thing1 thing2]`  
 `[another-custom-taxonomy 2 3 5]`
 
-### Attachments ###
+= Attachments =
 
 Any files attached to an email will be uploaded to the Media Library and added to the post as a gallery.  You can specify gallery options, or its location within the post, by including a <a href="http://codex.wordpress.org/Gallery_Shortcode">gallery shortcode</a> in your email.  If no gallery shortcode exists, it will be added to the end of the post.
 
@@ -64,7 +64,7 @@ Any files attached to an email will be uploaded to the Media Library and added t
 1. Activate the plugin through the 'Plugins' menu.
 1. Configure mailbox information under Tools->Post By Email.
 
-### Instructions for specific email services ###
+= Instructions for specific email services =
 
 - Gmail: <a href="https://support.google.com/mail/troubleshooter/1668960?hl=en">This page</a> will walk you through enabling IMAP or POP3 access.  When prompted to select an email client for configuration instructions, select "Other" to view the settings.
 

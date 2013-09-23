@@ -318,6 +318,9 @@ class Post_By_Email {
 
 			$content = trim( $content );
 
+			// replace HTML-ized quotes with the real thing, so shortcode arguments work
+			$content = str_replace( array( '&#39;', '&quot;' ), array( "'", '"' ), $content );
+
 			$post_content = apply_filters( 'phone_content' , $content );
 
 			/* post title */
@@ -409,12 +412,15 @@ class Post_By_Email {
 
 			/* attachments */
 			$attachment_count = $this->save_attachments( $uid, $post_ID );
-			if ( $attachment_count > 0 ) {
-				// add gallery to posts with attachments
+
+			if ( $attachment_count > 0 && ! has_shortcode( $post_content, 'gallery' ) ) {
+
+				// add a default gallery if there isn't one already
 				$post_info = array(
 					'ID' => $post_ID,
 					'post_content' => $post_content . '[gallery]',
 				);
+
 				wp_update_post( $post_info );
 			}
 

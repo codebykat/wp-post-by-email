@@ -19,7 +19,7 @@ Once an email has been successfully posted to the blog, it can either be marked 
 Updates on the project can be found on the [Make WordPress Core blog](http://make.wordpress.org/core/tag/post-by-email/).
 
 
-== Features ==
+**Features**
 
 * Supports IMAP or POP3 servers, with or without SSL
 * Optional PIN-based authentication guards against email spoofing
@@ -96,7 +96,7 @@ This probably means you're trying to connect to a POP3 server over the IMAP port
 
 == Testing ==
 
-= Automated Tests =
+### Automated Tests ###
 
 Like WordPress Core, this plugin includes automated unit tests written in PHPUnit.
 
@@ -105,7 +105,7 @@ To run the unit tests:
 1. Set up the WordPress testing library as described in [Handbook: Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).
 1. From the plugin directory, run `WP_TESTS_DIR=/path/to/WordPress/test/install phpunit`
 
-= Manual Testing =
+### Manual Testing ###
 
 1. Set up a test email address (services such as Gmail work great for this) and enable IMAP or POP3 access.  (Refer to <a href="http://wordpress.org/plugins/post-by-email/installation/">Installation</a> for detailed instructions.)
 1. Verify that you are using the correct mailbox settings by using a third-party email client, such as Outlook or OSX Mail.app, to connect to your test mailbox.

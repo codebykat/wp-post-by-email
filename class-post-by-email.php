@@ -306,6 +306,9 @@ class Post_By_Email {
 				$post_status = 'pending';
 			}
 
+			//Give Post-By-Email extending plugins the option of setting the post status
+			$post_status = apply_filters( 'wp_mail_post_status', $post_status );
+
 
 			/* Date */
 			$ddate_U = $this->get_message_date( $headers );

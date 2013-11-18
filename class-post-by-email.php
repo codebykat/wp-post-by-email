@@ -396,6 +396,10 @@ class Post_By_Email {
 			// save original message sender as post_meta, in case we want it later
 			add_post_meta( $post_ID, 'original_author', $from_email );
 
+			/* shortcode: post-format. [post-format format] */
+			$post_format_input = $this->find_shortcode( 'post-format', $original_post_content );
+			if ( ! empty( $post_format_input ) )
+				set_post_format( $post_ID, $post_format_input[0] );
 
 			/* shortcode: custom taxonomies.  [taxname term1 term2 ...] */
 			$tax_input = array();
@@ -843,7 +847,7 @@ class Post_By_Email {
 	 * @return   string    $text         Filtered text
 	 */
 	protected function filter_valid_shortcodes( $text ) {
-		$valid_shortcodes = array( 'tag', 'category', 'pin' );
+		$valid_shortcodes = array( 'tag', 'category', 'pin', 'post-format' );
 
 		// get all registered custom taxonomies
 		$args = array(

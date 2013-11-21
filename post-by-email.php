@@ -12,7 +12,7 @@
  * Plugin Name: Post By Email
  * Plugin URI:  http://codebykat.wordpress.com
  * Description: Create new posts on your WordPress blog by sending email to a specific email address.
- * Version:     1.0.4
+ * Version:     1.0.4b
  * Author:      Kat Hagan
  * Author URI:  http://profiles.wordpress.org/codebykat
  * Text Domain: post-by-email

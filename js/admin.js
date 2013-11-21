@@ -3,6 +3,21 @@ jQuery( document ).ready( function() {
 	// submit buttons start out disabled until changes are made
 	jQuery( 'form#post-by-email-options input[type=submit]' ).attr( 'disabled', 'disabled' );
 
+	function settingsChanged() {
+		jQuery( 'form#post-by-email-options input[type=submit]' ).removeAttr( 'disabled' );
+
+		// alert on "Check Now" if settings have been changed but not saved yet
+		jQuery( 'a#post-by-email-check-now' ).click( function(e) {
+			message = jQuery( 'span#post-by-email-settings-changed' ).html();
+			if ( ! confirm( PostByEmailVars['settingsMessage'] ) ) {
+				e.preventDefault();
+			}
+		} );
+	}
+
+	jQuery( 'form#post-by-email-options input' ).change( settingsChanged );
+	jQuery( 'form#post-by-email-options select' ).change( settingsChanged );
+
 	// AJAX request to clear the log
 	jQuery( 'a#clearLog' ).click( function( e ) {
 		e.preventDefault();
@@ -49,6 +64,7 @@ jQuery( document ).ready( function() {
 		jQuery( 'input#post_by_email_options\\[mailserver_port\\]' ).val( 993 );
 		jQuery( 'input#post_by_email_options\\[delete_messages\\]' ).attr( 'checked', 'checked' );
 		jQuery( 'input#post_by_email_options\\[delete_messages\\]' ).attr( 'disabled', false );
+		settingsChanged();
 	} );
 
 	if ( 'POP3' == jQuery( 'select#post_by_email_options\\[mailserver_protocol\\]' ).val() ) {
@@ -72,18 +88,6 @@ jQuery( document ).ready( function() {
 		} else {
 			jQuery( 'tr.post-by-email-pin-settings' ).hide();
 		}
-	} );
-
-	// alert on "Check Now" if settings have been changed but not saved yet
-	jQuery( 'input' ).change( function() {
-		jQuery( 'form#post-by-email-options input[type=submit]' ).removeAttr( 'disabled' );
-
-		jQuery( 'a#post-by-email-check-now' ).click( function(e) {
-			message = jQuery( 'span#post-by-email-settings-changed' ).html();
-			if ( ! confirm( PostByEmailVars['settingsMessage'] ) ) {
-				e.preventDefault();
-			}
-		} );
 	} );
 
 } );

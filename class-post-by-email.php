@@ -24,7 +24,7 @@ class Post_By_Email {
 	 *
 	 * @var     string
 	 */
-	protected $version = '1.0.4';
+	protected $version = '1.0.4b';
 
 	/**
 	 * Unique identifier for the plugin.
@@ -678,30 +678,13 @@ class Post_By_Email {
 		$content = strip_tags( $content, '<img><p><br><i><b><u><em><strong><strike><font><span><div><style><a>' );
 		$content = trim( $content );
 
-		// fix up special characters which get turned into unicode and destroy everything
-		// via http://stackoverflow.com/questions/12007613/devilish-curly-quotes
-
-		// First, replace UTF-8 characters.
-		$content = str_replace(
-			array(
-				"\xe2\x80\x98",
-				"\xe2\x80\x99",
-				"\xe2\x80\x9c",
-				"\xe2\x80\x9d",
-				"\xe2\x80\x93",
-				"\xe2\x80\x94",
-				"\xe2\x80\xa6",
-			),
-			array( "'", "'", '"', '"', '-', '--', '...' ),
-			$content
-		);
-
-		// Next, replace their Windows-1252 equivalents... and non-breaking spaces
-		$content = str_replace(
-			array( chr( 145 ), chr( 146 ), chr( 147 ), chr( 148 ), chr( 150 ), chr( 151 ), chr( 133 ), chr( 0xA0 ) ),
-			array( "'", "'", '"', '"', '-', '--', '...', ' ' ),
-			$content
-		);
+		// encode to UTF-8; this fixes up unicode characters like smart quotes, accents, etc.
+		$charset = $body->getCharset();
+		if ( 'iso-8859-1' == $charset ) {
+			$content = utf8_encode( $content );
+		} elseif ( function_exists( 'iconv' ) ) {
+			$content = iconv( $charset, 'UTF-8', $content );
+		}
 
 		return $content;
 	}

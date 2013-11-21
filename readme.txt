@@ -132,6 +132,10 @@ Then, provide as much of the following information as possible:
 
 == Changelog ==
 
+= 1.0.4b =
+* Fixed bug where unicode characters weren't getting encoded correctly, and were truncating the post.
+* Fixed bug where changing some settings on the admin screen didn't enable the "Save Changes" button.
+
 = 1.0.4 =
 * Added screenshots, expanded Readme and contextual help.
 * Added support for user-included gallery shortcode (allows use of WP's gallery options).

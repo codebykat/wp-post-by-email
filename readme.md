@@ -25,7 +25,7 @@ Updates on the project can be found on the [Make WordPress Core blog](http://mak
 * Supports IMAP or POP3 servers, with or without SSL
 * Optional PIN-based authentication guards against email spoofing
 * Uses WordPress's built-in roles to manage which users can post
-* Set categories, tags custom taxonomies and post format by including shortcodes in your email
+* Set categories, tags, custom taxonomies and post format by including shortcodes in your email
 * Email attachments will automatically be added to the post's gallery
 * Emails from unauthorized users can be either set as pending or discarded
 

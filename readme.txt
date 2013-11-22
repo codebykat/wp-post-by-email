@@ -25,7 +25,7 @@ Updates on the project can be found on the [Make WordPress Core blog](http://mak
 * Supports IMAP or POP3 servers, with or without SSL
 * Optional PIN-based authentication guards against email spoofing
 * Uses WordPress's built-in roles to manage which users can post
-* Set categories, tags and custom taxonomies by including shortcodes in your email
+* Set categories, tags custom taxonomies and post format by including shortcodes in your email
 * Email attachments will automatically be added to the post's gallery
 * Emails from unauthorized users can be either set as pending or discarded
 
@@ -39,18 +39,22 @@ By default, any users in the Author, Editor or Administrator roles are able to p
 
 By default, emailed posts will be placed in the default category configured in the settings.
 
-You can also set the categories, tags and custom taxonomy terms on your posts by including shortcodes in your email.  These should be space-separated.  Use slugs for tags (and non-hierarchical taxonomies) and either slugs or IDs for categories (/ hierarchical taxonomies).  Terms that do not yet exist will be created.  Examples:
+You can also set the categories, tags, custom taxonomy terms and post format on your posts by including shortcodes in your email.  These should be space-separated.  Use slugs for tags (and non-hierarchical taxonomies) and either slugs or IDs for categories (/ hierarchical taxonomies).  Terms that do not yet exist will be created.  Examples:
 
-**Categories:** Use either slugs or IDs.  
-`[category posted-by-email another-category]`  
+**Categories:** Use either slugs or IDs.
+`[category posted-by-email another-category]`
 `[category 14]`
 
-**Tags:** Use slugs.  
+**Tags:** Use slugs.
 `[tag cool-stuff]`
 
-**Custom Taxonomies:** Use slugs for non-hierarchical taxonomies, and IDs for hierarchical.  
-`[custom-taxonomy-name thing1 thing2]`  
+**Custom Taxonomies:** Use slugs for non-hierarchical taxonomies, and IDs for hierarchical.
+`[custom-taxonomy-name thing1 thing2]`
 `[another-custom-taxonomy 2 3 5]`
+
+**Post Format:** Supported formats: aside, audio, chat, gallery, image, link, quote, status, video.
+`[post-format format]`
+
 
 ### Attachments ###
 

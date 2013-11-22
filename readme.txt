@@ -2,8 +2,8 @@
 Contributors: codebykat
 Tags: post-by-email, email
 Requires at least: 3.6
-Tested up to: 3.7
-Stable tag: trunk
+Tested up to: 3.8
+Stable tag: 1.0.4b
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -128,6 +128,11 @@ Then, provide as much of the following information as possible:
 1. Your mailbox settings (URL, protocol, port and whether SSL is enabled; not your login and password).
 1. Any error messages displayed (it might help to <a href="http://codex.wordpress.org/WP_DEBUG">enable WP_DEBUG</a> in your wp-config.php).
 1. If the issue is related to a specific email, the full email, including headers.  Feel free to replace any personal information with dummy text (such as "sender@example.com").  <a href="https://support.google.com/groups/answer/75960?hl=en">This link</a> has instructions for viewing full message headers in Gmail, Outlook and Yahoo.
+
+
+== Contributing ==
+
+Help with development, support and testing is always welcome!  See the <a href="https://github.com/codebykat/wp-post-by-email/blob/master/CONTRIBUTING.md">Contributing guidelines</a> for more info.
 
 
 == Changelog ==

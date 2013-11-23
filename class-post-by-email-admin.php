@@ -72,6 +72,10 @@ class Post_By_Email_Admin {
 
 		// allow for manual trigger of the wp-mail.php action hook
 		add_action( 'admin_init', array( $this, 'maybe_check_mail' ) );
+		
+		// Add an action link pointing to the options page.
+		$plugin_basename = $plugin_basename = plugin_basename( plugin_dir_path( __FILE__ ) . 'post-by-email.php' );
+		add_filter( 'plugin_action_links_' . $plugin_basename, array( $this, 'add_action_links' ) );
 	}
 
 	/**
@@ -331,6 +335,20 @@ class Post_By_Email_Admin {
 		}
 
 		die();
+	}
+	
+	/**
+	 * Add settings action link to the plugins page.
+	 *
+	 * @since    TODO
+	 */
+	public function add_action_links( $links ) {
+		return array_merge(
+			array(
+				'settings' => '<a href="' . admin_url( 'tools.php?page=post-by-email' ) . '">' . __( 'Settings', 'post-by-email' ) . '</a>'
+			),
+			$links
+		);
 	}
 
 }

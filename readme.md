@@ -92,10 +92,10 @@ This probably means you're trying to connect to a POP3 server over the IMAP port
 ## Screenshots ##
 
 ###1. Main settings page###
-![Main settings page](http://s-plugins.wordpress.org/post-by-email/assets/screenshot-1.png)
+![Main settings page](http://plugins.trac.wordpress.org/export/809196/post-by-email/assets/screenshot-1.png)
 
 ###2. The activity log###
-![The activity log](http://s-plugins.wordpress.org/post-by-email/assets/screenshot-2.png)
+![The activity log](http://plugins.trac.wordpress.org/export/809196/post-by-email/assets/screenshot-2.png)
 
 
 

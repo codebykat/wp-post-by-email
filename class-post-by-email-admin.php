@@ -180,6 +180,10 @@ class Post_By_Email_Admin {
 			$options['discard_pending'] = ( 'discard' == $input['discard_pending'] );
 		}
 
+		if ( isset( $input['registered_pending'] ) ) {
+			$options['registered_pending'] = ( 'pending' == $input['registered_pending'] );
+		}
+
 		// this is ridiculous
 		if ( isset ( $input['status'] ) && in_array( $input['status'], array( 'unconfigured', 'error', '') ) ) {
 			// maintain saved state

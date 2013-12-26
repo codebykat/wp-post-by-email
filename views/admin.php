@@ -221,7 +221,24 @@
 							<option value="discard" <?php selected( $options['discard_pending'] ); ?>><?php _e( 'Discard them' ); ?></option>
 						</select>
 						<p class="description">
-							<?php _e( "Any messages received from email addresses registered to WordPress users will be posted (set to pending if they don't have the publish posts capability).  For emails that don't match a user in the system, you can choose to skip the message or post it as a pending draft.",
+							<?php _e( "For emails that don't match a user in the system, you can choose to skip the message or post it as a pending draft.",
+								'post-by-email' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr valign="top">
+					<th scope="row">
+						<label for="post_by_email_options[registered_pending]">
+							<?php _e( 'What should be done with posts from registered emails?', 'post-by-email' ); ?>
+						</label>
+					</th>
+					<td>
+						<select name="post_by_email_options[registered_pending]">
+							<option value="publish" <?php selected( $options['registered_pending'], false ); ?>><?php _e( 'Publish' ); ?></option>
+							<option value="pending" <?php selected( $options['registered_pending'] ); ?>><?php _e( 'Save as drafts' ); ?></option>
+						</select>
+						<p class="description">
+							<?php _e( "Any messages received from email addresses registered to WordPress users can be saved as drafts or published.  If they don't have the publish posts capability they will be saved as drafts.",
 								'post-by-email' ); ?>
 						</p>
 					</td>

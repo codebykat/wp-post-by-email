@@ -76,6 +76,7 @@ class Post_By_Email {
 		'pin_required'              => false,
 		'pin'                       => '',
 		'discard_pending'           => false,
+		'registered_pending'        => false
 	);
 
 	/**
@@ -294,7 +295,11 @@ class Post_By_Email {
 
 				// Set $post_status based on author's publish_posts capability
 				$user = new WP_User( $post_author );
-				$post_status = ( $user->has_cap( 'publish_posts' ) ) ? 'publish' : 'pending';
+				if ( $options['registered_pending'] ) {
+					$post_status =  'pending';
+				} else {
+					$post_status = ( $user->has_cap( 'publish_posts' ) ) ? 'publish' : 'pending';
+				}
 			} else {
 				if ( $options['discard_pending'] ) {
 					$log_message .= '<br />' . sprintf( __( "No author match for %s (Subject: %s); skipping.", 'post-by-email' ),

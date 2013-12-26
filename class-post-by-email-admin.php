@@ -74,7 +74,7 @@ class Post_By_Email_Admin {
 		add_action( 'admin_init', array( $this, 'maybe_check_mail' ) );
 		
 		// Add an action link pointing to the options page.
-		$plugin_basename = $plugin_basename = plugin_basename( plugin_dir_path( __FILE__ ) . 'post-by-email.php' );
+		$plugin_basename = plugin_basename( plugin_dir_path( __FILE__ ) . 'post-by-email.php' );
 		add_filter( 'plugin_action_links_' . $plugin_basename, array( $this, 'add_action_links' ) );
 	}
 

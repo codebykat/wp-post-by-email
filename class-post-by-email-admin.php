@@ -225,7 +225,7 @@ class Post_By_Email_Admin {
 		$this->plugin_screen_hook_suffix = add_management_page(
 			__( 'Post By Email', 'post-by-email' ),
 			__( 'Post By Email', 'post-by-email' ),
-			'read',
+			'manage_options',
 			'post-by-email',
 			array( $this, 'display_plugin_admin_page' )
 		);

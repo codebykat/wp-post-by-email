@@ -106,6 +106,19 @@
 						?>
 					</td>
 				</tr>
+				<tr valign="top">
+					<th scope="row">
+						<label for="post_by_email_options[send_response]">
+							<?php _e( 'Send response?', 'post-by-email' ); ?>
+						</label>
+					</th>
+					<td>
+						<input type="checkbox" name="post_by_email_options[send_response]" id="post_by_email_options[send_response]" <?php checked( $options['send_response'] ); ?> />
+						<span class="description">
+							<?php _e( 'A message will be returned to the email address from which a post was received showing success or failure of post.', 'post-by-email'); ?>
+						</span>
+					</td>
+				</tr>
 			</table>
 
 

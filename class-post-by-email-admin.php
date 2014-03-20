@@ -151,6 +151,8 @@ class Post_By_Email_Admin {
 			);
 		}
 
+		$options['send_response'] = isset( $input['send_response'] ) && '' != $input['send_response'];
+
 		$options['ssl'] = isset( $input['ssl'] ) && '' != $input['ssl'];
 		$options['delete_messages'] = isset( $input['delete_messages'] ) && '' != $input['delete_messages'];
 

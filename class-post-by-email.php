@@ -752,6 +752,7 @@ class Post_By_Email {
 				$directory = $upload_dir['basedir'] . $upload_dir['subdir'];
 
 				wp_mkdir_p( $directory );
+				$filename = wp_unique_filename( $directory, $filename );
 				file_put_contents( $directory . '/' . $filename, $image_data_decoded );
 
 				// add attachment to the post

@@ -759,7 +759,7 @@ class Post_By_Email {
 				$attachment_args = array(
 					'post_title' => $filename,
 					'post_content' => '',
-					'post_status' => 'publish',
+					'post_status' => 'inherit',
 					'post_mime_type' => $filetype,
 				);
 

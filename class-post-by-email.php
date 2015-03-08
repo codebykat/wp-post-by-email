@@ -302,8 +302,13 @@ class Post_By_Email {
 				}
 			} else {
 				if ( $options['discard_pending'] ) {
-					$log_message .= '<br />' . sprintf( __( "No author match for %s (Subject: %s); skipping.", 'post-by-email' ),
+					$post_log_message = sprintf( __( "No author match for %s (Subject: %s); skipping.", 'post-by-email' ),
 															$from_email, $subject );
+					$log_message .= '<br />' . $post_log_message;
+					// send response email for failure
+					if ( $options['send_response'] ) {
+						$this->send_response( FALSE, $subject, $post_log_message, $from_email );
+					}
 					continue;
 				}
 				// use admin if no author found
@@ -349,7 +354,12 @@ class Post_By_Email {
 
 				if ( $pin != $options['pin'] ) {
 					// security check failed - move on to the next message
-					$log_message .= '<br />"' . $post_title . '" ' . __( 'failed PIN authentication; discarding.', 'post-by-email' );
+					$post_log_message = '"' . $post_title . '" ' . __( 'failed PIN authentication; discarding.', 'post-by-email' );
+					$log_message .= '<br />' . $post_log_message;
+					// send response email for failure
+					if ( $options['send_response'] ) {
+						$this->send_response( FALSE, $subject, $post_log_message, $from_email );
+					}
 					continue;
 				}
 			}
@@ -392,6 +402,10 @@ class Post_By_Email {
 			if ( is_wp_error( $post_ID ) ) {
 				$log_message .= "\n" . $post_ID->get_error_message();
 				$this->save_error_message( $log_message );
+				// send response email for failure
+				if ( $options['send_response'] ) {
+					$this->send_response( FALSE, $subject, $post_ID->get_error_message(), $from_email );
+				}
 			}
 
 			// We couldn't post, for whatever reason. Better move forward to the next email.
@@ -452,7 +466,13 @@ class Post_By_Email {
 				$pending = __( ' (pending)', 'post-by-email' );
 			}
 
-			$log_message .= "<br />" . __( 'Posted:', 'post-by-email') . ' <a href="' . get_permalink( $post_ID ) . '">' . esc_html( $post_title ) . '</a>' . $pending;
+			$post_log_message = __( 'Posted:', 'post-by-email') . ' <a href="' . get_permalink( $post_ID ) . '">' . esc_html( $post_title ) . '</a>' . $pending;
+			$log_message .= "<br />" . $post_log_message;
+
+			// send response email for success
+			if ( $options['send_response'] ) {
+				$this->send_response( TRUE, $subject, $post_log_message, $from_email );
+			}
 
 		} // end foreach
 
@@ -927,4 +947,28 @@ class Post_By_Email {
 			require_once( $filename );
 		}
 	}
+
+	/**
+	 * Send a response to the originating email address.
+	 *
+	 * @since    1.0.5
+	 *
+	 * @param    bool      $success        Was the post added?
+	 * @param    string    $subject        The message subject
+	 * @param    string    $log_message    The message return by the post.
+	 * @param    string    $author_email   Email from which post originated.
+	 */
+	protected function send_response( $success, $subject, $log_message, $author_email ) {
+		// Set the header as HTML content type
+		$headers[] = 'Content-type: text/html';
+
+		// Set the message depending on success or failure
+		$message = $success ? __( '<strong><em>Success!</em></strong>', 'post-by-email' ) : __( '<strong><em>Failed!</em></strong>', 'post-by-email' );
+
+		$message .= '<br /><br />' . $log_message;
+
+		// Send the message
+		wp_mail( $author_email, 'Re: ' . $subject, $message, $headers );
+	}
+
 }

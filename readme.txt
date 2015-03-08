@@ -28,6 +28,7 @@ Updates on the project can be found on the [Make WordPress Core blog](http://mak
 * Set categories, tags, custom taxonomies and post format by including shortcodes in your email
 * Email attachments will automatically be added to the post's gallery
 * Emails from unauthorized users can be either set as pending or discarded
+* Enable an auto-responder to show success or failure of post
 
 ### Post Authors and Security ###
 

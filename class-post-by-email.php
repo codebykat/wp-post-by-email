@@ -747,7 +747,7 @@ class Post_By_Email {
 		foreach ( $map as $key => $value ) {
 			$p = $part->getPart( $key );
 
-			if ( 'attachment' == $p->getDisposition() ) {
+			if ( 'attachment' == $p->getDisposition() || ( 'inline' == $p->getDisposition() && 'image' == $p->getPrimaryType() ) ) {
 				$mime_id = $key;
 				$filename = sanitize_file_name( $p->getName() );
 				$filetype = $p->getType();
@@ -766,34 +766,53 @@ class Post_By_Email {
 
 				$message = $list2->first();
 
-				$image_data = $message->getBodyPart( $mime_id );
-				$image_data_decoded = base64_decode( $image_data );
-
 				$upload_dir = wp_upload_dir();
 				$directory = $upload_dir['basedir'] . $upload_dir['subdir'];
 
-				wp_mkdir_p( $directory );
 				$filename = wp_unique_filename( $directory, $filename );
-				file_put_contents( $directory . '/' . $filename, $image_data_decoded );
 
-				// add attachment to the post
-				$attachment_args = array(
-					'post_title' => $filename,
-					'post_content' => '',
-					'post_status' => 'inherit',
-					'post_mime_type' => $filetype,
+				$image_data = $message->getBodyPart( $mime_id );
+				$image_data_decoded = base64_decode( $image_data );
+
+				$tmp_file      = tmpfile();
+				$meta_data     = stream_get_meta_data( $tmp_file );
+				$written_bytes = fwrite( $tmp_file, $image_data_decoded );
+				fseek( $tmp_file, 0 );
+
+				$file = array(
+					'name'     => $filename,
+					'tmp_name' => $meta_data['uri'],
+					'type'     => $value,
+					'size'     => $written_bytes,
 				);
 
-				$attachment_id = wp_insert_attachment( $attachment_args, $directory . '/' . $filename, $postID );
-				$attachment_metadata = wp_generate_attachment_metadata( $attachment_id, $directory . '/' . $filename );
-				wp_update_attachment_metadata( $attachment_id, $attachment_metadata );
-				$attachment_count++;
+				$new_file = wp_handle_sideload( $file, array( 'test_form' => false ) );
 
-				// make the first image attachment the featured image
-				$image_types = array( 'image/jpeg', 'image/jpg', 'image/png', 'image/gif' );
-				if ( false == $post_thumbnail && in_array( $filetype, $image_types ) ) {
-					set_post_thumbnail( $postID, $attachment_id );
-					$post_thumbnail = true;
+				// Delete the temp file
+				fclose( $tmp_file );
+
+				if ( $new_file && ! is_wp_error( $new_file ) && ! isset( $new_file['error'] ) ) {
+					$filename = basename( $new_file['file'] );
+
+					// add attachment to the post
+					$attachment_args = array(
+						'post_title' => $filename,
+						'post_content' => '',
+						'post_status' => 'inherit',
+						'post_mime_type' => $filetype,
+					);
+
+					$attachment_id = wp_insert_attachment( $attachment_args, $new_file['file'], $postID );
+					$attachment_metadata = wp_generate_attachment_metadata( $attachment_id, $new_file['file'] );
+					wp_update_attachment_metadata( $attachment_id, $attachment_metadata );
+					$attachment_count++;
+
+					// make the first image attachment the featured image
+					$image_types = array( 'image/jpeg', 'image/jpg', 'image/png', 'image/gif' );
+					if ( false == $post_thumbnail && in_array( $filetype, $image_types ) ) {
+						set_post_thumbnail( $postID, $attachment_id );
+						$post_thumbnail = true;
+					}
 				}
 			}
 		}

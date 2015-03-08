@@ -108,6 +108,8 @@ This probably means you're trying to connect to a POP3 server over the IMAP port
 
 Like WordPress Core, this plugin includes automated unit tests written in PHPUnit.
 
+[![Build Status](https://travis-ci.org/codebykat/wp-post-by-email.svg?branch=master)](https://travis-ci.org/codebykat/wp-post-by-email)
+
 To run the unit tests:
 
 1. Set up the WordPress testing library as described in [Handbook: Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).

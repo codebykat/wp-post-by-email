@@ -114,9 +114,9 @@
 					</th>
 					<td>
 						<input type="checkbox" name="post_by_email_options[send_response]" id="post_by_email_options[send_response]" <?php checked( $options['send_response'] ); ?> />
-						<span class="description">
-							<?php _e( 'A message will be returned to the email address from which a post was received showing success or failure of post.', 'post-by-email'); ?>
-						</span>
+						<p class="description">
+							<?php _e( 'Check this box if you want to receive acknowledgements and errors via email reply.', 'post-by-email'); ?>
+						</p>
 					</td>
 				</tr>
 			</table>

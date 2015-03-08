@@ -76,7 +76,8 @@ class Post_By_Email {
 		'pin_required'              => false,
 		'pin'                       => '',
 		'discard_pending'           => false,
-		'registered_pending'        => false
+		'registered_pending'        => false,
+		'send_response'             => false,
 	);
 
 	/**

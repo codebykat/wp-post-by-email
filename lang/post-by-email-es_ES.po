@@ -1,0 +1,341 @@
+# Copyright (C) 2013 Post By Email
+# This file is distributed under the same license as the Post By Email package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Post By Email 1.0.4\n"
+"Report-Msgid-Bugs-To: http://wordpress.org/support/plugin/wp-post-by-email\n"
+"POT-Creation-Date: 2015-03-09 07:27:54+00:00\n"
+"PO-Revision-Date: 2015-03-09 00:45-0800\n"
+"Last-Translator: jelena kovacevic <jecajeca260@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.7\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: class-post-by-email-admin.php:123
+msgid "Could not save protocol: must be POP3 or IMAP."
+msgstr "No se pudo guardar el protocolo: debe ser POP3 o IMAP."
+
+#: class-post-by-email-admin.php:135
+msgid "Could not save port number: invalid number."
+msgstr "No se pudo guardar el número de puerto: número inválido."
+
+#: class-post-by-email-admin.php:147
+msgid "Could not save default category: category not found."
+msgstr ""
+"No se pudo guardar la categoría por defecto: la categoría no se encuentra."
+
+#: class-post-by-email-admin.php:163
+msgid "Please enter a security PIN to enable PIN authentication."
+msgstr ""
+"Por favor, introduzca un PIN de seguridad para habilitar la autenticación "
+"por PIN."
+
+#: class-post-by-email-admin.php:172
+msgid "Error: PIN cannot contain shortcode delimiters."
+msgstr "Error: El PIN no puede contener delimitadores de código corto."
+
+#: class-post-by-email-admin.php:245
+msgid "For more information:"
+msgstr "Para más información:"
+
+#: class-post-by-email-admin.php:246
+msgid "Installation"
+msgstr "Instalación"
+
+#: class-post-by-email-admin.php:247
+msgid "Usage"
+msgstr "Usable"
+
+#: class-post-by-email-admin.php:248
+msgid "Support Forums"
+msgstr "Foros de Soporte"
+
+#: class-post-by-email-admin.php:354
+msgid "Settings"
+msgstr "Ajustes"
+
+#: class-post-by-email.php:231
+msgid "Please wait %s to check mail again!"
+msgstr "¡Por favor espere %s para comprobar el email otra vez!"
+
+#: class-post-by-email.php:266
+msgid "There doesn&#8217;t seem to be any new mail."
+msgstr "No parece haber ningún correo nuevo."
+
+#: class-post-by-email.php:271
+msgid "Found 1 new message."
+msgid_plural "Found %s new messages."
+msgstr[0] ""
+msgstr[1] ""
+
+#: class-post-by-email.php:306
+msgid "No author match for %s (Subject: %s); skipping."
+msgstr "No hay resultados para %s (Asunto:%s); omitiendo."
+
+#: class-post-by-email.php:358
+msgid "failed PIN authentication; discarding."
+msgstr "la autenticación de PIN ha fallado; descartando."
+
+#: class-post-by-email.php:462
+msgid "(no title)"
+msgstr "(no hay título)"
+
+#: class-post-by-email.php:467
+msgid " (pending)"
+msgstr "(pendiente)"
+
+#: class-post-by-email.php:470
+msgid "Posted:"
+msgstr "Posteado:"
+
+#: class-post-by-email.php:526 class-post-by-email.php:565
+#: class-post-by-email.php:847
+msgid "An error occurred: "
+msgstr "Ha ocurrido un error:"
+
+#: class-post-by-email.php:986
+msgid "Success!"
+msgstr ""
+
+#: class-post-by-email.php:986
+msgid "Failed!"
+msgstr ""
+
+#: views/admin.php:21
+msgid "Your settings have been saved."
+msgstr "Su configuración ha sido guardada."
+
+#: views/admin.php:29
+msgid "Basic Settings"
+msgstr "Configuración Básica"
+
+#: views/admin.php:32
+msgid "Mailbox Details"
+msgstr "Detalles del Buzón"
+
+#: views/admin.php:35
+msgid "Security"
+msgstr "Seguridad"
+
+#: views/admin.php:38
+msgid "Activity Log"
+msgstr "Log de Actividad"
+
+#: views/admin.php:50
+msgid ""
+"To post to WordPress by e-mail you must set up a special-purpose e-mail "
+"account\n"
+"\t\t\t\t\t\twith IMAP or POP3 access. Any mail received at this address will "
+"be posted, so it's\n"
+"\t\t\t\t\t\ta good idea to keep this address very secret.  For an extra "
+"level of security, enable\n"
+"\t\t\t\t\t\tPIN-based authentication under the Security tab."
+msgstr ""
+"Para postear en WordPress por e-mail debe establecer una cuenta de e-mail "
+"con un propósito especial\n"
+"\t\t\t\t\t\tcon acceso IMAP o POP3. Cualquier mail recibido a esta dirección "
+"será posteado, por lo que es\n"
+"\t\t\t\t\t\t una buena idea mantener esta dirección secreta. Para un nivel "
+"extra de seguridad, habilite\n"
+"\t\t\t\t\t\t la autenticación basada en PIN en el tab de Seguridad. "
+
+#: views/admin.php:62
+msgid "Mail Server"
+msgstr "Servidor de Email"
+
+#: views/admin.php:68
+msgid "The address of the incoming mail server (IMAP or POP3)."
+msgstr "La dirección del servidor de correo entrante (POP3 o IMAP)."
+
+#: views/admin.php:75
+msgid "Login Name"
+msgstr "Nombre de Usuario"
+
+#: views/admin.php:85
+msgid "Password"
+msgstr "Contraseña"
+
+#: views/admin.php:95
+msgid "Default Mail Category"
+msgstr "Categoría por Defecto del Email"
+
+#: views/admin.php:112
+msgid "Send response?"
+msgstr ""
+
+#: views/admin.php:118
+msgid ""
+"Check this box if you want to receive acknowledgements and errors via email "
+"reply."
+msgstr ""
+
+#: views/admin.php:130
+msgid ""
+"Configure the details of your mailbox connection.  The default settings "
+"should work with most email accounts, but if your mail server differs, you "
+"can enter it here."
+msgstr ""
+"Configure los detalles de la conexión del buzón. La configuración por "
+"defecto debería funcionar con la mayoría de las cuentas de email, pero si su "
+"servidor de correo es diferente, puede introducirlo aquí."
+
+#: views/admin.php:136
+msgid "Protocol"
+msgstr "Protocolo"
+
+#: views/admin.php:149
+msgid "Port"
+msgstr "Puerto"
+
+#: views/admin.php:155
+msgid ""
+"Common port numbers: 143 (IMAP), 993 (IMAP/SSL), 110 (POP3), 995 (POP3/SSL)."
+msgstr ""
+"Número de los puertos comunes: 143 (IMAP), 993 (IMAP/SSL), 110 (POP3), 995 "
+"(POP3/SSL)."
+
+#: views/admin.php:162
+msgid "Always use secure connection (SSL)?"
+msgstr "¿Utilizar siempre una conexión segura (SSL)?"
+
+#: views/admin.php:172
+msgid "Delete messages after posting?"
+msgstr "¿Eliminar los mensajes después de publicarlos?"
+
+#: views/admin.php:177
+msgid ""
+"Uncheck this box to mark messages as read instead of deleting (requires "
+"IMAP)."
+msgstr ""
+"Desactive esta casilla para marcar los mensajes como leídos en lugar de "
+"eliminarlos (requiere IMAP)."
+
+#: views/admin.php:183
+msgid "Reset to Defaults"
+msgstr "Restablecer valores predeterminados"
+
+#: views/admin.php:190
+msgid ""
+"If you do not require a PIN to create a new post, anyone who knows your "
+"email address and the address of your Post By Email inbox will be able to "
+"post to this blog."
+msgstr ""
+"Si usted no requiere un PIN para crear un nuevo mensaje, cualquiera que "
+"conozca su dirección de email y la dirección de su Mail Para Postear de su "
+"buzón  será capaz de escribir en este blog."
+
+#: views/admin.php:196
+msgid ""
+"Once you have enabled PIN-based authentication, include the PIN in your "
+"email with a shortcode.  Emails that do not include the correct PIN will be "
+"discarded."
+msgstr ""
+"Una vez habilitada la autenticación basada en PIN, incluya el PIN en su "
+"email  con un código corto. Los correos electrónicos que no incluyen el PIN "
+"correcto se descartarán."
+
+#: views/admin.php:200
+msgid "Example:"
+msgstr "Ejemplo:"
+
+#: views/admin.php:207
+msgid "Require a PIN to post?"
+msgstr "¿La publicación requiere un PIN?"
+
+#: views/admin.php:217
+msgid "PIN"
+msgstr "PIN"
+
+#: views/admin.php:222
+msgid "Generate"
+msgstr "Generar"
+
+#: views/admin.php:228
+msgid "What should be done with posts from unrecognized emails?"
+msgstr "¿Qué se debe hacer con los mensajes de los emails no reconocidos?"
+
+#: views/admin.php:233 views/admin.php:251
+msgid "Save as drafts"
+msgstr "Guardar en borradores"
+
+#: views/admin.php:234
+msgid "Discard them"
+msgstr "Descartarlos"
+
+#: views/admin.php:237
+msgid ""
+"For emails that don't match a user in the system, you can choose to skip the "
+"message or post it as a pending draft."
+msgstr ""
+
+#: views/admin.php:245
+msgid "What should be done with posts from registered emails?"
+msgstr ""
+
+#: views/admin.php:250
+msgid "Publish"
+msgstr ""
+
+#: views/admin.php:254
+#, fuzzy
+msgid ""
+"Any messages received from email addresses registered to WordPress users can "
+"be saved as drafts or published.  If they don't have the publish posts "
+"capability they will be saved as drafts."
+msgstr ""
+"Todos los mensajes recibidos de direcciones de emails registradas para los "
+"usuarios de WordPress se publicarán (establecidos como pendientes si no "
+"tienen la capacidad de publicar mensajes). Para los emails que no concuerdan "
+"con un usuario en el sistema, puede optar por omitir el mensaje o publicarlo "
+"como un proyecto pendiente."
+
+#: views/admin.php:273
+msgid "Last checked for new mail:"
+msgstr "Último revisado para correo nuevo:"
+
+#: views/admin.php:281
+msgid "Never"
+msgstr "Nunca"
+
+#: views/admin.php:284
+msgid "Next scheduled check:"
+msgstr "Próximo chequeo programado:"
+
+#: views/admin.php:293
+msgid "Check now"
+msgstr "Chequear now"
+
+#: views/admin.php:299
+msgid "Clear Log"
+msgstr "Limpiar Log"
+
+#: views/admin.php:305
+msgid "Log Messages"
+msgstr "Log de Mensajes"
+
+#. Plugin Name of the plugin/theme
+msgid "Post By Email"
+msgstr "Mensaje Por Email"
+
+#. Plugin URI of the plugin/theme
+msgid "http://codebykat.wordpress.com"
+msgstr "http://codebykat.wordpress.com"
+
+#. Description of the plugin/theme
+msgid ""
+"Create new posts on your WordPress blog by sending email to a specific email "
+"address."
+msgstr ""
+"Crear nuevas entradas de su blog de WordPress mediante el envío de email a "
+"una dirección de email específica."
+
+#. Author of the plugin/theme
+msgid "Kat Hagan"
+msgstr "Kat Hagan"
+
+#. Author URI of the plugin/theme
+msgid "http://profiles.wordpress.org/codebykat"
+msgstr "http://profiles.wordpress.org/codebykat"

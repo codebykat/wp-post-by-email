@@ -195,7 +195,7 @@ class Post_By_Email {
 	 */
 	public function load_plugin_textdomain() {
 		$domain = $this->plugin_slug;
-		load_plugin_textdomain( $domain, FALSE, dirname( plugin_basename( __FILE__ ) ) . '/lang/' );
+		load_plugin_textdomain( $domain, false, dirname( plugin_basename( __FILE__ ) ) . '/lang/' );
 	}
 
 	/**
@@ -983,9 +983,9 @@ class Post_By_Email {
 		$headers[] = 'Content-type: text/html';
 
 		// Set the message depending on success or failure
-		$message = $success ? __( '<strong><em>Success!</em></strong>', 'post-by-email' ) : __( '<strong><em>Failed!</em></strong>', 'post-by-email' );
+		$message_title = $success ? __( 'Success!', 'post-by-email' ) : __( 'Failed!', 'post-by-email' );
 
-		$message .= '<br /><br />' . $log_message;
+		$message .= '<strong>' . $message_title . '</strong><br /><br />' . $log_message;
 
 		// Send the message
 		wp_mail( $author_email, 'Re: ' . $subject, $message, $headers );

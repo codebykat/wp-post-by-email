@@ -6,8 +6,8 @@ Thanks for your interest in helping out with the plugin!  If you'd like help get
 * All pull requests should be against the master branch, which is the active development branch.
 * Follow the [WordPress coding standards](http://make.wordpress.org/core/handbook/coding-standards/).
 * Test with WP_DEBUG enabled and make sure there are no warnings.
-* Like WordPress core, everything has to work in PHP 5.2 as well as 5.3.  Please test in both versions!
-* If you're adding a new feature or changing the way an existing one works, add user documentation to readme.txt.  The Markdown version can be generated with [this online tool](http://wordpress-markdown-to-github-markdown.com/).
+* Like WordPress core, everything has to work in PHP 5.2 and up. Travis will run tests against all PHP versions, so make sure your additions have test coverage.
+* If you're adding a new feature or changing the way an existing one works, add user documentation to readme.txt.  The Markdown version can be generated with [this online tool](http://wpreadme2markdown.com/).
 * Add a line to the changelog in readme.txt as well.
 
 
@@ -17,14 +17,6 @@ I can always use help answering support requests in the [plugin forums](http://w
 
 * Help troubleshoot problems and answer general questions.
 * Figure out the exact steps needed to reproduce bugs.
-
-
-## Tests ##
-
-The tests are pretty basic right now and don't do a very good job of covering all possible cases.  Some obvious needs:
-
-* Figure out how to automate testing in both PHP 5.2 and 5.3.
-* Write a test that reproduces an issue reported in the support forum.
 
 
 ## Beta Testing ##

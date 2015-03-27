@@ -252,7 +252,7 @@ class Post_By_Email_Mailserver_Horde extends Post_By_Email_Mailserver {
 				// this will call it something like inline-1.jpg
 				$allowed_extensions = get_allowed_mime_types();
 				$possible_extensions = array_search( $p->getType(), $allowed_extensions );
-				$ext = explode( '|', $possible_extensions )[0];
+				$ext = array_shift( explode( '|', $possible_extensions ) );
 				$name = $disposition . '-' . ( count( $attachments ) + 1 ) . '.' . $ext;
 			}
 

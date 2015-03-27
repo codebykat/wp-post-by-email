@@ -10,11 +10,10 @@
  */
 
 /**
- * Mailserver test class.
+ * Abstract Mailserver test class. Mailserver tests should inherit from this.
  *
  * @package PostByEmail
  * @author  Kat Hagan <kat@codebykat.com>
- * @group PostByEmailMailserver
  */
 abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 
@@ -46,7 +45,7 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 		parent::setUp();
 
 		// spin up email server
-		shell_exec( plugin_dir_path( __FILE__ ) . '../vendor/tedivm/dovecottesting/SetupEnvironment.sh' );
+		shell_exec( 'bash ' . plugin_dir_path( __FILE__ ) . '../vendor/tedivm/dovecottesting/SetupEnvironment.sh' );
 		if ( getenv( 'TRAVIS') ) {
 			self::$connection_options['hostspec'] = '127.0.0.1';
 		}

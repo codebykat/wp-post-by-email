@@ -31,7 +31,7 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 		'protocol' => 'IMAP',
 		'username' => 'testuser',
 		'password' => 'applesauce',
-		'hostspec' => '127.0.0.1',
+		'hostspec' => '172.31.1.2',
 		'port' => 143,
 		'secure' => false,
 	);

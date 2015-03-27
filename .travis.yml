@@ -24,6 +24,11 @@ matrix:
         - php: 5.6
           env: WP_VERSION=3.6 WP_MULTISITE=1
 
+before_install:
+    - phpenv global 5.3
+    - composer install
+    - phpenv global "$TRAVIS_PHP_VERSION"
+
 before_script:
     - export WP_TESTS_DIR=/tmp/wordpress-tests/
     - bash install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION 

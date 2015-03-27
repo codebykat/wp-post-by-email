@@ -1,9 +1,9 @@
 === Post By Email ===
-Contributors: codebykat
+Contributors: codebykat, flyingtrolleycars, barryceelen, UaMV, nikolovtmw
 Tags: post-by-email, email
 Requires at least: 3.6
-Tested up to: 3.8
-Stable tag: 1.0.4b
+Tested up to: 4.2
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -11,13 +11,9 @@ Create new posts on your WordPress blog by sending email to a specific email add
 
 == Description ==
 
-**Warning:** This plugin is currently in beta!  Use at your own risk and please report any bugs, either on the [WordPress Support forums](http://wordpress.org/support/plugin/post-by-email) or via the [Github issues page](https://github.com/codebykat/wp-post-by-email/issues).
-
 Any new messages sent to the configured email address will be posted to the blog.  This plugin replaces the functionality that used to live in WordPress core.
 
 Once an email has been successfully posted to the blog, it can either be marked as read (IMAP servers only) or deleted from the mailbox.
-
-Updates on the project can be found on the [Make WordPress Core blog](http://make.wordpress.org/core/tag/post-by-email/).
 
 
 ### Features ###
@@ -28,7 +24,7 @@ Updates on the project can be found on the [Make WordPress Core blog](http://mak
 * Set categories, tags, custom taxonomies and post format by including shortcodes in your email
 * Email attachments will automatically be added to the post's gallery
 * Emails from unauthorized users can be either set as pending or discarded
-* Enable an auto-responder to show success or failure of post
+* Enable an auto-responder to report success or failure of post
 
 ### Post Authors and Security ###
 
@@ -88,7 +84,7 @@ Posts will be backdated to use the date and time they were received by the mails
 No, emails are not "forwarded" to your blog.  Just like any third-party mail client, Post By Email has to check for new messages, and will only do this once per hour (or when you click the "Check Now" button in the settings).  In addition, because of how WordPress' task scheduling (wp_cron) works, this check will only be triggered when a page on your blog has been loaded.  There is also sometimes a delay between when messages are sent and when they show up in the mailbox, especially with POP3 access.
 
 = I found a bug! =
-Oh no!  I would like to know as much as possible about it so that I can fix it.  For the information to include with a bug report, please see the Reporting Bugs section in <a href="http://wordpress.org/plugins/post-by-email/other_notes/">Other Notes</a>.
+Please report it so I can track it down and squish it! For the information to include with a bug report, see the Reporting Bugs section in <a href="http://wordpress.org/plugins/post-by-email/other_notes/">Other Notes</a>.
 
 = What does the error "Bad tagged response" mean? =
 This probably means you're trying to connect to a POP3 server over the IMAP port, or vice versa.  Double-check your server URL, protocol and port number and try again.
@@ -127,9 +123,9 @@ Before reporting a bug, make sure you've updated the plugin to the latest versio
 
 Then, provide as much of the following information as possible:
 
-1. WordPress version (e.g. 3.6.x).
+1. WordPress version (e.g. 4.1.x).
 1. Plugin version (e.g. 1.0.4).
-1. PHP version (e.g. 5.2.x or 5.3.x).
+1. PHP version (e.g. 5.3.x).
 1. Your mailbox settings (URL, protocol, port and whether SSL is enabled; not your login and password).
 1. Any error messages displayed (it might help to <a href="http://codex.wordpress.org/WP_DEBUG">enable WP_DEBUG</a> in your wp-config.php).
 1. If the issue is related to a specific email, the full email, including headers.  Feel free to replace any personal information with dummy text (such as "sender@example.com").  <a href="https://support.google.com/groups/answer/75960?hl=en">This link</a> has instructions for viewing full message headers in Gmail, Outlook and Yahoo.
@@ -141,6 +137,21 @@ Help with development, support and testing is always welcome!  See the <a href="
 
 
 == Changelog ==
+
+= 1.1 (in development) =
+* Abstracted mailserver functionality into a subclass, and added a Horde instance of the mailserver class.
+* Fixed a bug where the last checked time was not getting properly set.
+* Set a featured image when an image is included in the email. Props <a href="https://github.com/nikolov-tmw">Nikola Nikolov</a>
+* Import inline images and use wp_handle_sideload() for image importing. Props <a href="https://github.com/nikolov-tmw">Nikola Nikolov</a>
+* Spanish and Serbian translations! Props Ogi Djuraskovic of firstsiteguide.com.
+
+= 1.0.5 =
+* Added auto-responder setting that will reply to the originating email address with a success or failure message. Props <a href="https://github.com/UaMV">Joshua Vandercar</a>
+* Added support for defining the post format via a shortcode. Props <a href="https://github.com/barryceelen">Barry Ceelen</a>
+* Added Settings action link to the plugins page. Props <a href="https://github.com/barryceelen">Barry Ceelen</a>
+* Added option to choose drafts when receiving from a registered email. Props <a href="https://github.com/infamouse">Andrew Jacobs</a>
+* Make attachment filenames unique. Props <a href="https://github.com/richbrat">Richard Brattlund</a>
+* Properly set attachment filetypes to "inherit". Props <a href="https://github.com/richbrat">Richard Brattlund</a>
 
 = 1.0.4b =
 * Fixed bug where unicode characters weren't getting encoded correctly, and were truncating the post.

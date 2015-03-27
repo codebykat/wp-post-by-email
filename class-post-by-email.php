@@ -5,7 +5,7 @@
  * @package   PostByEmail
  * @author    Kat Hagan <kat@codebykat.com>
  * @license   GPL-2.0+
- * @copyright 2013 Kat Hagan
+ * @copyright 2013-2015 Kat Hagan / Automattic
  * @link      https://github.com/codebykat/wp-post-by-email/
  */
 
@@ -24,7 +24,7 @@ class Post_By_Email {
 	 *
 	 * @var     string
 	 */
-	protected $version = '1.0.4b';
+	protected $version = '1.1';
 
 	/**
 	 * Unique identifier for the plugin.

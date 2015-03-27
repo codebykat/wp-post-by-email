@@ -7,8 +7,8 @@
  * @package   PostByEmail
  * @author    Kat Hagan <kat@codebykat.com>
  * @license   GPL-2.0+
- * @copyright 2013 Kat Hagan
  * @link      https://github.com/codebykat/wp-post-by-email/
+ * @copyright 2013-2015 Kat Hagan / Automattic
  */
 ?>
 <div class="wrap">

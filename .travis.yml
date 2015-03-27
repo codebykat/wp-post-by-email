@@ -28,5 +28,6 @@ before_script:
     - export WP_TESTS_DIR=/tmp/wordpress-tests/
     - bash install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION 
     - composer install --dev
+    - vendor/tedivm/dovecottesting/SetupEnvironment.sh
 
 script: phpunit

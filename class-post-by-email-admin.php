@@ -207,7 +207,7 @@ class Post_By_Email_Admin {
 		}
 		else {
 			// clear the transient and any error conditions if we have good options now
-			delete_transient( 'mailserver_last_checked' );
+			delete_transient( 'post_by_email_last_checked' );
 			$options['status'] = '';
 		}
 

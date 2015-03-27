@@ -225,7 +225,7 @@ class Post_By_Email {
 		if ( ! defined( 'WP_MAIL_INTERVAL' ) )
 			define( 'WP_MAIL_INTERVAL', 5 * MINUTE_IN_SECONDS );
 
-		$last_checked = get_transient( 'mailserver_last_checked' );
+		$last_checked = get_transient( 'post_by_email_last_checked' );
 
 		if ( $last_checked && ! WP_DEBUG ) {
 			$time_diff = __( human_time_diff( time(), time() + WP_MAIL_INTERVAL ), 'post-by-email' );
@@ -234,7 +234,7 @@ class Post_By_Email {
 			return;
 		}
 
-		set_transient( 'mailserver_last_checked', true, WP_MAIL_INTERVAL );
+		set_transient( 'post_by_email_last_checked', true, WP_MAIL_INTERVAL );
 
 		$options = get_option( 'post_by_email_options' );
 
@@ -934,7 +934,7 @@ class Post_By_Email {
 			update_option( 'post_by_email_options', $options );
 
 			// clear the transient so the user can trigger another check right away
-			delete_transient( 'mailserver_last_checked' );
+			delete_transient( 'post_by_email_last_checked' );
 		}
 	}
 

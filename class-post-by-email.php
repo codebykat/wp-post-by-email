@@ -5,8 +5,8 @@
  * @package   PostByEmail
  * @author    Kat Hagan <kat@codebykat.com>
  * @license   GPL-2.0+
- * @link      http://codebykat.wordpress.com
  * @copyright 2013 Kat Hagan
+ * @link      https://github.com/codebykat/wp-post-by-email/
  */
 
 /**
@@ -48,6 +48,15 @@ class Post_By_Email {
 	protected static $instance = null;
 
 	/**
+	 * Instance of the mailserver utility class.
+	 *
+	 * @since    1.0.5
+	 *
+	 * @var      object
+	 */
+	protected static $mailserver = null;
+
+	/**
 	 * Plugin include path (used for autoloading libraries).
 	 *
 	 * @since    0.9.7
@@ -82,24 +91,6 @@ class Post_By_Email {
 	);
 
 	/**
-	* Active connection.
-	*
-	* @since    1.0.0
-	*
-	* @var      object
-	*/
-	protected $connection;
-
-	/**
-	* Connection protocol (POP3 or IMAP).
-	*
-	* @since    1.0.1
-	*
-	* @var      string
-	*/
-	protected $protocol;
-
-	/**
 	 * Initialize the plugin by setting localization, filters, and administration functions.
 	 *
 	 * @since     0.9.0
@@ -117,6 +108,9 @@ class Post_By_Email {
 
 		// disable wp-mail.php
 		add_filter( 'enable_post_by_email_configuration', '__return_false' );
+
+		// @todo: check PHP version & whether IMAP extension is installed
+		self::$mailserver = new Post_By_Email_Mailserver_Horde();
 	}
 
 	/**
@@ -256,17 +250,17 @@ class Post_By_Email {
 			'secure'   => $options['ssl'] ? 'ssl' : false,
 		);
 
-		$this->connection = $this->open_mailbox_connection( $connection_options );
-
-		if ( ! $this->connection ) {
+		try {
+			$this->open_mailbox( $connection_options );
+			$uids = $this->get_messages();
+		} catch( Exception $e ) {
+			$this->save_error_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
 			return;
 		}
 
-		$uids = $this->get_messages();
-
 		if ( 0 === sizeof( $uids ) ) {
 			$this->save_log_message( __( 'There doesn&#8217;t seem to be any new mail.', 'post-by-email' ) );
-			$this->close_connection();
+			$this->close_mailbox();
 			return;
 		}
 
@@ -275,15 +269,13 @@ class Post_By_Email {
 		$time_difference = get_option( 'gmt_offset' ) * HOUR_IN_SECONDS;
 		$phone_delim = '::';
 
-		foreach ( $uids as $id ) {
-			$uid = new Horde_Imap_Client_Ids( $id );
-
+		foreach ( $uids as $uid ) {
 			// get headers
 			$headers = $this->get_message_headers( $uid );
 
 			/* Subject */
 			// Captures any text in the subject before $phone_delim as the subject
-			$subject = $headers->getValue( 'Subject' );
+			$subject = $headers['Subject'];
 			$subject = explode( $phone_delim, $subject );
 			$subject = $subject[0];
 			$subject = trim( $subject );
@@ -483,8 +475,7 @@ class Post_By_Email {
 
 		// mark all processed emails as read
 		$this->mark_as_read( $uids, $options['delete_messages'] );
-
-		$this->close_connection();
+		$this->close_mailbox();
 	}
 
 	/**
@@ -502,96 +493,6 @@ class Post_By_Email {
 	}
 
 	/**
-	 * Establishes the connection to the mailserver.
-	 *
-	 * @since    1.0.0
-	 *
-	 * @param    array    $options    Options array
-	 *
-	 * @return   object
-	 */
-	protected function open_mailbox_connection( $connection_options ) {
-		$options = get_option( 'post_by_email_options' );
-		if ( 'POP3' == $options['mailserver_protocol'] ) {
-			$this->protocol = 'POP3';
-			$connection = new Horde_Imap_Client_Socket_Pop3( $connection_options );
-		} else {  // IMAP
-			$this->protocol = 'IMAP';
-			$connection = new Horde_Imap_Client_Socket( $connection_options );
-		}
-		$connection->_setInit( 'authmethod', 'USER' );
-
-		try {
-			$connection->login();
-		}
-		catch( Horde_Imap_Client_Exception $e ) {
-			$this->save_error_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
-			return false;
-		}
-
-		return $connection;
-	}
-
-	/**
-	* Closes the connection to the mailserver.
-	*
-	* @since    1.0.4
-	*/
-	protected function close_connection() {
-		$this->connection->shutdown();
-	}
-
-	/**
-	 * Retrieve the list of new message IDs from the server.
-	 *
-	 * @since    1.0.0
-	 *
-	 * @return   array    Array of message UIDs
-	 */
-	protected function get_messages() {
-		if ( ! $this->connection )
-			return;
-
-		try {
-			// POP3 doesn't understand about read/unread messages
-			if ( 'POP3' == $this->protocol ) {
-				$test = $this->connection->search( 'INBOX' );
-			} else {
-				$search_query = new Horde_Imap_Client_Search_Query();
-				$search_query->flag( Horde_Imap_Client::FLAG_SEEN, false );
-				$test = $this->connection->search( 'INBOX', $search_query );
-			}
-			$uids = $test['match'];
-		}
-		catch( Horde_Imap_Client_Exception $e ) {
-			$this->save_error_message( __( 'An error occurred: ', 'post-by-email' ) . $e->getMessage() );
-			return false;
-		}
-		return $uids;
-	}
-
-	/**
-	 * Retrieve message headers.
-	 *
-	 * @since    1.0.0
-	 *
-	 * @param    int    $uid    Message UID
-	 *
-	 * @return   object
-	 */
-	protected function get_message_headers( $uid ) {
-		$headerquery = new Horde_Imap_Client_Fetch_Query();
-		$headerquery->headerText( array() );
-		$headerlist = $this->connection->fetch( 'INBOX', $headerquery, array(
-				'ids' => $uid,
-			)
-		);
-
-		$headers = $headerlist->first()->getHeaderText( 0, Horde_Imap_Client_Data_Fetch::HEADER_PARSE );
-		return $headers;
-	}
-
-	/**
 	 * Find the email address of the message sender from the headers.
 	 *
 	 * @since    1.0.0
@@ -602,8 +503,8 @@ class Post_By_Email {
 	 */
 	protected function get_message_author( $headers ) {
 		// Set the author using the email address (From or Reply-To, the last used)
-		$author = $headers->getValue( 'From' );
-		// $replyto = $headers->getValue( 'Reply-To' );  // this is not used and doesn't make sense
+		$author = $headers['From'];
+		// $replyto = $headers['Reply-To'];  // this is not used and doesn't make sense
 
 		if ( preg_match( '|[a-z0-9_.-]+@[a-z0-9_.-]+(?!.*<)|i', $author, $matches ) )
 			$author = $matches[0];
@@ -620,6 +521,65 @@ class Post_By_Email {
 	}
 
 	/**
+	 * Establishes the connection to the mailserver.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    array    $options    Options array
+	 *
+	 * @return   bool
+	 */
+	protected function open_mailbox( $connection_options ) {
+		return self::$mailserver->open_mailbox_connection( $connection_options );
+	}
+
+	/**
+	* Closes the connection to the mailserver.
+	*
+	* @since    1.0.4
+	*/
+	protected function close_mailbox() {
+		return self::$mailserver->close_connection();
+	}
+
+	/**
+	 * Retrieve the list of new message IDs from the server.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @return   array    Array of message UIDs
+	 */
+	protected function get_messages() {
+		return self::$mailserver->get_messages();
+	}
+
+	/**
+	 * Retrieve message headers.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    int    $uid    Message UID
+	 *
+	 * @return   object
+	 */
+	protected function get_message_headers( $uid ) {
+		return self::$mailserver->get_message_headers( $uid );
+	}
+
+	/**
+	 * Get the content of a message from the mailserver.
+	 *
+	 * @since    1.0.0
+	 *
+	 * @param    int       Message UID
+	 *
+	 * @return   string    Message content
+	 */
+	protected function get_message_body( $uid ) {
+		return self::$mailserver->get_message_body( $uid );
+	}
+
+	/**
 	 * Get the date of a message from its headers.
 	 *
 	 * @since    1.0.0
@@ -629,7 +589,7 @@ class Post_By_Email {
 	 * @return   string
 	 */
 	protected function get_message_date( $headers ) {
-		$date = $headers->getValue( 'Date' );
+		$date = $headers['Date'];
 		$dmonths = array( 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' );
 
 		// of the form '20 Mar 2002 20:32:37'
@@ -663,62 +623,48 @@ class Post_By_Email {
 	}
 
 	/**
-	 * Get the content of a message from the mailserver.
+	 * Mark a list of messages read on the server.
 	 *
 	 * @since    1.0.0
 	 *
+	 * @param    array    $uids      UIDs of messages that have been processed
+	 * @param    bool     $delete    Whether to delete read messages
+	 */
+	protected function mark_as_read( $uids, $whether_to_delete ) {
+		try {
+			self::$mailserver->mark_as_read( $uids, $whether_to_delete );
+		} catch( Exception $e ) {
+			$this->save_error_message( __( 'An error occurred: ', 'post-by-email') . $e->getMessage() );
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Get a message's attachments from the mail server.
+	 *
+	 * @since    1.0.5
+	 *
 	 * @param    int       Message UID
 	 *
-	 * @return   string    Message content
+	 * @return   array     Message attachments
 	 */
-	protected function get_message_body( $uid ) {
-		$query = new Horde_Imap_Client_Fetch_Query();
-		$query->structure();
+	protected function get_attachments( $uid ) {
+		return self::$mailserver->get_attachments( $uid );
+	}
 
-		$list = $this->connection->fetch( 'INBOX', $query, array(
-				'ids' => $uid,
-			)
-		);
-
-		$part = $list->first()->getStructure();
-		$body_id = $part->findBody('html');
-		if ( is_null( $body_id ) ) {
-			$body_id = $part->findBody();
-		}
-		$body = $part->getPart( $body_id );
-
-		$query2 = new Horde_Imap_Client_Fetch_Query();
-		$query2->bodyPart( $body_id, array(
-				'decode' => true,
-				'peek' => true,
-			)
-		);
-
-		$list2 = $this->connection->fetch( 'INBOX', $query2, array(
-				'ids' => $uid,
-			)
-		);
-
-		$message2 = $list2->first();
-		$content = $message2->getBodyPart( $body_id );
-		if ( ! $message2->getBodyPartDecode( $body_id ) ) {
-			// Quick way to transfer decode contents
-			$body->setContents( $content );
-			$content = $body->getContents();
-		}
-
-		$content = strip_tags( $content, '<img><p><br><i><b><u><em><strong><strike><font><span><div><style><a>' );
-		$content = trim( $content );
-
-		// encode to UTF-8; this fixes up unicode characters like smart quotes, accents, etc.
-		$charset = $body->getCharset();
-		if ( 'iso-8859-1' == $charset ) {
-			$content = utf8_encode( $content );
-		} elseif ( function_exists( 'iconv' ) ) {
-			$content = iconv( $charset, 'UTF-8', $content );
-		}
-
-		return $content;
+	/**
+	 * Get a single attachment from the mail server.
+	 *
+	 * @since    1.0.5
+	 *
+	 * @param    ID        Message ID
+	 * @param    mime_id   Attachment's MIME ID
+	 *
+	 * @return   string    Decoded attachment data
+	 */
+	protected function get_single_attachment( $id, $mime_id ) {
+		return self::$mailserver->get_single_attachment( $id, $mime_id );
 	}
 
 	/**
@@ -732,49 +678,25 @@ class Post_By_Email {
 	 * @return   int       Number of attachments saved
 	 */
 	protected function save_attachments( $uid, $postID ) {
-		$query = new Horde_Imap_Client_Fetch_Query();
-		$query->structure();
+		$image_types = array( 'image/jpeg', 'image/jpg', 'image/png', 'image/gif' );
 
-		$list = $this->connection->fetch( 'INBOX', $query, array(
-				'ids' => $uid,
-			)
-		);
-
-		$part = $list->first()->getStructure();
-		$map = $part->ContentTypeMap();
+		$attachments = $this->get_attachments( $uid );
 
 		$attachment_count = 0;
 		$post_thumbnail = false;
 
-		foreach ( $map as $key => $value ) {
-			$p = $part->getPart( $key );
-
-			if ( 'attachment' == $p->getDisposition() || ( 'inline' == $p->getDisposition() && 'image' == $p->getPrimaryType() ) ) {
-				$mime_id = $key;
-				$filename = sanitize_file_name( $p->getName() );
-				$filetype = $p->getType();
-
-				$query2 = new Horde_Imap_Client_Fetch_Query();
-				$query2->bodyPart( $mime_id, array(
-						'decode' => true,
-						'peek' => true,
-					)
-				);
-
-				$list2 = $this->connection->fetch( 'INBOX', $query2, array(
-						'ids' => $uid,
-					)
-				);
-
-				$message = $list2->first();
+		foreach ( $attachments as $attachment ) {
+			if ( 'attachment' === $attachment['disposition'] || ( 'inline' === $attachment['disposition'] && 'image' === $attachment['type'] ) ) {
+				$mime_id = $attachment['mime_id'];
+				$filename = sanitize_file_name( $attachment['name'] );
+				$filetype = $attachment['mimetype'];
 
 				$upload_dir = wp_upload_dir();
 				$directory = $upload_dir['basedir'] . $upload_dir['subdir'];
 
 				$filename = wp_unique_filename( $directory, $filename );
 
-				$image_data = $message->getBodyPart( $mime_id );
-				$image_data_decoded = base64_decode( $image_data );
+				$image_data_decoded = $this->get_single_attachment( $uid, $mime_id );
 
 				$tmp_file      = tmpfile();
 				$meta_data     = stream_get_meta_data( $tmp_file );
@@ -784,7 +706,7 @@ class Post_By_Email {
 				$file = array(
 					'name'     => $filename,
 					'tmp_name' => $meta_data['uri'],
-					'type'     => $value,
+					'type'     => $filetype,
 					'size'     => $written_bytes,
 				);
 
@@ -810,8 +732,7 @@ class Post_By_Email {
 					$attachment_count++;
 
 					// make the first image attachment the featured image
-					$image_types = array( 'image/jpeg', 'image/jpg', 'image/png', 'image/gif' );
-					if ( false == $post_thumbnail && in_array( $filetype, $image_types ) ) {
+					if ( false === $post_thumbnail && in_array( $filetype, $image_types ) ) {
 						set_post_thumbnail( $postID, $attachment_id );
 						$post_thumbnail = true;
 					}
@@ -823,31 +744,26 @@ class Post_By_Email {
 	}
 
 	/**
-	 * Mark a list of messages read on the server.
+	 * Send a response to the originating email address.
 	 *
-	 * @since    1.0.0
+	 * @since    1.0.5
 	 *
-	 * @param    array    $uids      UIDs of messages that have been processed
-	 * @param    bool     $delete    Whether to delete read messages
+	 * @param    bool      $success        Was the post added?
+	 * @param    string    $subject        The message subject
+	 * @param    string    $log_message    The message return by the post.
+	 * @param    string    $author_email   Email from which post originated.
 	 */
-	protected function mark_as_read( $uids, $delete=false ) {
-		if ( ! $this->connection )
-			return;
+	protected function send_response( $success, $subject, $log_message, $author_email ) {
+		// Set the header as HTML content type
+		$headers[] = 'Content-type: text/html';
 
-		$flag = Horde_Imap_Client::FLAG_SEEN;
-		if ( $delete || ( 'POP3' == $this->protocol ) )
-			$flag = Horde_Imap_Client::FLAG_DELETED;
+		// Set the message depending on success or failure
+		$message_title = $success ? __( 'Success!', 'post-by-email' ) : __( 'Failed!', 'post-by-email' );
 
-		try {
-			$this->connection->store( 'INBOX', array(
-					'add' => array( $flag ),
-					'ids' => $uids,
-				)
-			);
-		}
-		catch ( Horde_Imap_Client_Exception $e ) {
-			$this->save_error_message( __( 'An error occurred: ', 'post-by-email' ) . $e->getMessage() );
-		}
+		$message = '<strong>' . $message_title . '</strong><br /><br />' . $log_message;
+
+		// Send the message
+		wp_mail( $author_email, 'Re: ' . $subject, $message, $headers );
 	}
 
 	/**
@@ -969,28 +885,4 @@ class Post_By_Email {
 			require_once( $filename );
 		}
 	}
-
-	/**
-	 * Send a response to the originating email address.
-	 *
-	 * @since    1.0.5
-	 *
-	 * @param    bool      $success        Was the post added?
-	 * @param    string    $subject        The message subject
-	 * @param    string    $log_message    The message return by the post.
-	 * @param    string    $author_email   Email from which post originated.
-	 */
-	protected function send_response( $success, $subject, $log_message, $author_email ) {
-		// Set the header as HTML content type
-		$headers[] = 'Content-type: text/html';
-
-		// Set the message depending on success or failure
-		$message_title = $success ? __( 'Success!', 'post-by-email' ) : __( 'Failed!', 'post-by-email' );
-
-		$message .= '<strong>' . $message_title . '</strong><br /><br />' . $log_message;
-
-		// Send the message
-		wp_mail( $author_email, 'Re: ' . $subject, $message, $headers );
-	}
-
 }

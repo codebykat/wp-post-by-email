@@ -5,12 +5,12 @@
  * @package   PostByEmail
  * @author    Kat Hagan <kat@codebykat.com>
  * @license   GPL-2.0+
- * @link      http://codebykat.wordpress.com
  * @copyright 2013 Kat Hagan
+ * @link      https://github.com/codebykat/wp-post-by-email/
  *
  * @wordpress-plugin
  * Plugin Name: Post By Email
- * Plugin URI:  http://codebykat.wordpress.com
+ * Plugin URI:  https://github.com/codebykat/wp-post-by-email/
  * Description: Create new posts on your WordPress blog by sending email to a specific email address.
  * Version:     1.0.4b
  * Author:      Kat Hagan
@@ -48,5 +48,8 @@ if ( is_admin() ) {
 }
 
 require_once( plugin_dir_path( __FILE__ ) . 'include/array_replace_recursive.php' );
+
+require_once( plugin_dir_path( __FILE__ ) . 'class-post-by-email-mailserver.php' );
+require_once( plugin_dir_path( __FILE__ ) . 'class-post-by-email-mailserver-horde.php' );
 
 Post_By_Email::get_instance();

@@ -14,6 +14,7 @@
  *
  * @package PostByEmail
  * @author  Kat Hagan <kat@codebykat.com>
+ * @group   PostByEmailCore
  */
 class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 
@@ -134,49 +135,16 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		$this->set_option( 'mailserver_url', 'mail.example.com' );
 		$this->set_option( 'status', 'unconfigured' );
 
-		$stub = $this->getMock( 'Post_By_Email', array( 'open_mailbox_connection', 'get_messages', 'close_connection' ), array(), '', false );
+		$stub = $this->getMock( 'Post_By_Email', array( 'open_mailbox', 'get_messages', 'close_connection' ), array(), '', false );
 
 		$stub->check_email();
 
 		// should immediately return without doing anything
 		$stub->expects( $this->never() )
-			->method( 'open_mailbox_connection' );
+			->method( 'open_mailbox' );
 
 		$stub->expects( $this->never() )
 			->method( 'get_messages' );
-
-		$this->assertEquals( 'Nothing logged.', $this->get_last_log_message() );
-	}
-
-	/**
-	* Test opening a POP3 connection with the right options.
-	*
-	* @since    1.0.4
-	*/
-	public function test_open_POP3_connection() {
-		$stub = $this->getMock( 'Post_By_Email', array( 'open_mailbox_connection', 'get_messages', 'close_connection' ), array(), '', false );
-
-		$this->set_option( 'mailserver_url', 'mail.test.com' );
-		$this->set_option( 'mailserver_port', '110' );
-		$this->set_option( 'ssl', false );
-		$this->set_option( 'mailserver_protocol', 'POP3' );
-		$this->set_option( 'mailserver_login', 'test@test.com' );
-		$this->set_option( 'mailserver_pass', 'password' );
-		$this->set_option( 'status', '' );
-
-		$connection_options = array(
-			'username' => 'test@test.com',
-			'password' => 'password',
-			'hostspec' => 'mail.test.com',
-			'port' => 110,
-			'secure' => false,
-		);
-
-		$stub->expects( $this->once() )
-			->method( 'open_mailbox_connection' )
-			->with( $this->equalTo( $connection_options ) );
-
-		$stub->check_email();
 
 		$this->assertEquals( 'Nothing logged.', $this->get_last_log_message() );
 	}
@@ -187,12 +155,28 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	* @since    1.0.4
 	*/
 	public function test_check_email_no_new_messages() {
+		$stub = $this->getMock( 'Post_By_Email', array( 'open_mailbox', 'get_messages', 'close_mailbox' ), array(), '', false );
+
+		$this->set_option( 'mailserver_url', 'mail.test.com' );
+		$this->set_option( 'mailserver_port', '110' );
+		$this->set_option( 'ssl', false );
+		$this->set_option( 'mailserver_protocol', 'POP3' );
+		$this->set_option( 'mailserver_login', 'test@test.com' );
+		$this->set_option( 'mailserver_pass', 'password' );
 		$this->set_option( 'status', '' );
 
-		$stub = $this->getMock( 'Post_By_Email', array( 'open_mailbox_connection', 'get_messages', 'close_connection' ), array(), '', false );
+		$connection_options = array(
+			'protocol' => 'POP3',
+			'username' => 'test@test.com',
+			'password' => 'password',
+			'hostspec' => 'mail.test.com',
+			'port' => 110,
+			'secure' => false,
+		);
 
 		$stub->expects( $this->once() )
-			->method( 'open_mailbox_connection' )
+			->method( 'open_mailbox' )
+			->with( $this->equalTo( $connection_options ) )
 			->will( $this->returnValue( true ) );
 
 		$stub->expects( $this->once() )
@@ -200,7 +184,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 			->will( $this->returnValue( array() ) );
 
 		$stub->expects( $this->once() )
-			->method( 'close_connection' );
+			->method( 'close_mailbox' );
 
 		$stub->check_email();
 
@@ -216,9 +200,9 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		$this->set_option( 'status', '' );
 
 		$methods_to_stub = array(
-			'open_mailbox_connection',
+			'open_mailbox',
 			'get_messages',
-			'close_connection',
+			'close_mailbox',
 			'get_message_headers',
 			'get_message_body',
 			'save_attachments',
@@ -227,7 +211,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		$stub = $this->getMock( 'Post_By_Email', $methods_to_stub, array(), '', false );
 
 		$stub->expects( $this->once() )
-			->method( 'open_mailbox_connection' )
+			->method( 'open_mailbox' )
 			->will( $this->returnValue( true ) );
 
 		$message_text = file_get_contents( 'messages/message_with_attachments', true );
@@ -255,7 +239,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 			->method( 'mark_as_read' );
 
 		$stub->expects( $this->once() )
-			->method( 'close_connection' );
+			->method( 'close_mailbox' );
 
 		$stub->check_email();
 

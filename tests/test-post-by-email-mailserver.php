@@ -46,6 +46,9 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 
 		// spin up email server
 		shell_exec( 'bash ' . plugin_dir_path( __FILE__ ) . '../vendor/tedivm/dovecottesting/SetupEnvironment.sh' );
+		if ( getenv( 'TRAVIS') ) {
+			self::$connection_options['hostspec'] = '127.0.0.1';
+		}
 
 		// child classes MUST instantiate $this->mailserver in their setUp() functions.
 	}

@@ -590,6 +590,10 @@ class Post_By_Email {
 	 */
 	protected function get_message_date( $headers ) {
 		$date = $headers['Date'];
+		if ( ! $date ) {
+			return current_time( 'timestamp', true );
+		}
+
 		$dmonths = array( 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' );
 
 		// of the form '20 Mar 2002 20:32:37'

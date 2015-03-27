@@ -1,0 +1,52 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "f01a6b800bcdaf121a7b4b7d63305b53",
+    "packages": [],
+    "packages-dev": [
+        {
+            "name": "tedivm/dovecottesting",
+            "version": "v1.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tedious/DovecotTesting.git",
+                "reference": "c8aee5614240b89b226969ec693440be17f09311"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tedious/DovecotTesting/zipball/c8aee5614240b89b226969ec693440be17f09311",
+                "reference": "c8aee5614240b89b226969ec693440be17f09311",
+                "shasum": ""
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Robert Hafner",
+                    "email": "tedivm@tedivm.com"
+                }
+            ],
+            "description": "An IMAP Testing Suite",
+            "homepage": "http://github.com/tedivm/DovecotTesting",
+            "keywords": [
+                "email",
+                "imap",
+                "pop3"
+            ],
+            "time": "2014-05-20 04:24:22"
+        }
+    ],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}

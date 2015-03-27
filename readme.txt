@@ -104,7 +104,9 @@ Like WordPress Core, this plugin includes automated unit tests written in PHPUni
 
 To run the unit tests:
 
-1. Set up the WordPress testing library as described in [Handbook: Automated Testing](http://make.wordpress.org/core/handbook/automated-testing/).  You can also do this [using WP-CLI](http://wp-cli.org/blog/plugin-unit-tests.html).
+1. Set up the WordPress testing library: `bash install-wp-tests.sh wordpress_test root '' localhost latest`
+1. Install [composer](https://getcomposer.org/): `curl -sS https://getcomposer.org/installer | php`
+1. Install testing library: `php composer.phar install`
 1. From the plugin directory, run `WP_TESTS_DIR=/path/to/WordPress/test/install phpunit`
 
 = Manual Testing =

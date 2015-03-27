@@ -275,8 +275,8 @@
 				$date_format = get_option( 'date_format' );
 				$time_format = get_option( 'time_format' );
 			?>
-			<?php if ( isset( $options['last_checked'] ) ) : ?>
-				<?php echo date_i18n( "$date_format, $time_format", $options['last_checked'] ); ?>
+			<?php if ( isset( $options['last_checked'] ) && 0 < $options['last_checked'] ) : ?>
+				<?php echo get_date_from_gmt( date( 'Y-m-d H:i:s', $options['last_checked'] ), "$date_format, $time_format" ); ?>
 			<?php else: ?>
 				<?php _e( 'Never', 'post-by-email' ); ?>
 			<?php endif; ?>

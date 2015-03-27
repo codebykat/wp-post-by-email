@@ -188,9 +188,12 @@ class Post_By_Email_Admin {
 
 		// this is ridiculous
 		if ( isset ( $input['status'] ) && in_array( $input['status'], array( 'unconfigured', 'error', '') ) ) {
-			// maintain saved state
 			$options['status'] = $input['status'];
 		}
+		if ( isset ( $input['last_checked'] ) ) {
+			$options['last_checked'] = (int) $input['last_checked'];
+		}
+
 		elseif ( ( $options['mailserver_url'] == $default_options['mailserver_url'] )
 			|| ( '' == $options['mailserver_url'] )
 			|| ( $options['mailserver_login'] == $default_options['mailserver_login'] )

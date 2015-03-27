@@ -78,6 +78,7 @@ class Post_By_Email {
 		'discard_pending'           => false,
 		'registered_pending'        => false,
 		'send_response'             => false,
+		'last_checked'              => 0,
 	);
 
 	/**
@@ -175,7 +176,7 @@ class Post_By_Email {
 
 		// schedule hourly mail checks with wp_cron
 		if ( ! wp_next_scheduled( 'post-by-email-wp-mail.php' ) ) {
-			wp_schedule_event( current_time( 'timestamp', 1 ), 'hourly', 'post-by-email-wp-mail.php' );
+			wp_schedule_event( current_time( 'timestamp', true ), 'hourly', 'post-by-email-wp-mail.php' );
 		}
 	}
 
@@ -206,7 +207,7 @@ class Post_By_Email {
 	public function manual_check_email() {
 		// update scheduled check so next one is an hour from last manual check
 		wp_clear_scheduled_hook( 'post-by-email-wp-mail.php' );
-		wp_schedule_event( current_time( 'timestamp', 1 ) + HOUR_IN_SECONDS, 'hourly', 'post-by-email-wp-mail.php' );
+		wp_schedule_event( current_time( 'timestamp', true ) + HOUR_IN_SECONDS, 'hourly', 'post-by-email-wp-mail.php' );
 
 		$this->check_email();
 
@@ -238,20 +239,21 @@ class Post_By_Email {
 		$options = get_option( 'post_by_email_options' );
 
 		// if options aren't set, there's nothing to do, move along
-		if ( 'unconfigured' == $options['status'] ) {
+		if ( 'unconfigured' === $options['status'] ) {
 			return;
 		}
 
-		$options['last_checked'] = current_time( 'timestamp' );
+		$options['last_checked'] = current_time( 'timestamp', true );
 		$options['status'] = '';
 		update_option( 'post_by_email_options', $options );
 
 		$connection_options = array(
+			'protocol' => $options['mailserver_protocol'],
 			'username' => $options['mailserver_login'],
 			'password' => $options['mailserver_pass'],
 			'hostspec' => $options['mailserver_url'],
-			'port' => $options['mailserver_port'],
-			'secure' => $options['ssl'] ? 'ssl' : false,
+			'port'     => $options['mailserver_port'],
+			'secure'   => $options['ssl'] ? 'ssl' : false,
 		);
 
 		$this->connection = $this->open_mailbox_connection( $connection_options );

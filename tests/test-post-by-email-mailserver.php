@@ -31,7 +31,7 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 		'protocol' => 'IMAP',
 		'username' => 'testuser',
 		'password' => 'applesauce',
-		'hostspec' => '172.31.1.2',
+		'hostspec' => '127.0.0.1',
 		'port' => 143,
 		'secure' => false,
 	);
@@ -46,9 +46,6 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 
 		// spin up email server
 		shell_exec( 'bash ' . plugin_dir_path( __FILE__ ) . '../vendor/tedivm/dovecottesting/SetupEnvironment.sh' );
-		if ( getenv( 'TRAVIS') ) {
-			self::$connection_options['hostspec'] = '127.0.0.1';
-		}
 
 		// child classes MUST instantiate $this->mailserver in their setUp() functions.
 	}

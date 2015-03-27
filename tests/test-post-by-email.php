@@ -221,9 +221,15 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 			->method( 'get_messages' )
 			->will( $this->returnValue( array( 1 ) ) );
 
+		$headers_array = array(
+			'Date'    => $headers->getValue( 'Date' ),
+			'Subject' => $headers->getValue( 'Subject' ),
+			'From'    => $headers->getValue( 'From' ),
+		);
+
 		$stub->expects( $this->once() )
 			->method( 'get_message_headers' )
-			->will( $this->returnValue( $headers ) );
+			->will( $this->returnValue( $headers_array ) );
 
 		$message = Horde_Mime_Part::parseMessage( $message_text );
 		$body = $message->getPart('1.1')->toString();

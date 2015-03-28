@@ -253,4 +253,98 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		$this->assertRegExp( '/Posted(.*?)' . $headers->getValue('Subject') . '/', $this->get_last_log_message() );
 	}
 
+	/**
+	* Test that checking mail properly sets the last checked time.
+	*
+	* @since    1.1
+	*/
+	public function test_checking_mail_sets_last_checked_time_to_now() {
+		// This will test $stub->manual_check_email();
+		$this->markTestIncomplete();
+	}
+
+	/**
+	* Test that checking mail properly reschedules the next check.
+	*
+	* @since    1.1
+	*/
+	public function test_checking_mail_schedules_the_next_check_for_an_hour_from_now() {
+		// This will test $stub->check_email();
+		$this->markTestIncomplete();
+	}
+
+	/**
+	* Test getting the site's admin ID.
+	*
+	* @since    1.1
+	*/
+	public function test_get_admin_id() {
+		// This will test $stub->get_admin_id();
+		$this->markTestIncomplete();
+	}
+
+	/**
+	* Test getting the message author from the message headers.
+	*
+	* @since    1.1
+	*/
+	public function test_get_message_author() {
+		// This will test $stub->get_message_author();
+		$this->markTestIncomplete();
+	}
+
+	/**
+	* Test getting the message date from the message headers.
+	*
+	* @since    1.1
+	*/
+	public function test_get_message_date() {
+		// This will test $stub->get_message_date();
+		$this->markTestIncomplete();
+	}
+
+	/**
+	* Test getting the message attachments and uploading them to a post.
+	*
+	* @since    1.1
+	*/
+	public function test_save_attachments() {
+		// This will test $stub->save_attachments();
+		$this->markTestIncomplete();
+	}
+
+	/**
+	* Test sending an email response.
+	*
+	* @since    1.1
+	*/
+	public function test_send_response() {
+		// This will test $stub->send_response();
+		$this->markTestIncomplete();
+	}
+
+	/**
+	* Test finding a shortcode in the message content and returning its arguments.
+	*
+	* @since    1.1
+	*/
+	public function test_find_shortcode() {
+		// This will test $stub->find_shortcode();
+		$this->markTestIncomplete();
+	}
+
+	/**
+	* Test saving a log message.
+	*
+	* @since    1.1
+	*/
+	public function test_filter_valid_shortcodes() {
+		// This will test $stub->filter_valid_shortcodes();
+		$this->markTestIncomplete();
+	}
+
+	public function test_save_log_message() {
+		// This will test $stub->save_log_message();
+		$this->markTestIncomplete();
+	}
 }

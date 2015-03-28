@@ -51,6 +51,6 @@ require_once( plugin_dir_path( __FILE__ ) . 'include/array_replace_recursive.php
 
 require_once( plugin_dir_path( __FILE__ ) . 'class-post-by-email-mailserver.php' );
 require_once( plugin_dir_path( __FILE__ ) . 'class-post-by-email-mailserver-horde.php' );
-require_once( plugin_dir_path( __FILE__ ) . 'class-post-by-email-mailserver-IMAP.php' );
+require_once( plugin_dir_path( __FILE__ ) . 'class-post-by-email-mailserver-imap.php' );
 
 Post_By_Email::get_instance();

@@ -45,8 +45,9 @@ class Post_By_Email_Mailserver_Horde extends Post_By_Email_Mailserver {
 	* @since    1.1
 	*/
 	public function close_connection() {
-		if ( ! $this->connection )
+		if ( ! $this->connection ) {
 			return;
+		}
 
 		$this->connection->shutdown();
 	}
@@ -135,6 +136,8 @@ class Post_By_Email_Mailserver_Horde extends Post_By_Email_Mailserver {
 				'ids' => $uids,
 			)
 		);
+
+		return true;
 	}
 
 	/**

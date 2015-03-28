@@ -36,8 +36,11 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 		'secure' => false,
 	);
 
+	// Some message info to test
+	protected static $first_message_id = 8;
+
 	/**
-	* Set up the tests.
+	* Before all tests: set options and start up / reset the test mailserver.
 	*
 	* @since    1.1
 	*/
@@ -45,7 +48,6 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 		if ( getenv( 'TRAVIS') ) {
 			self::$connection_options['hostspec'] = '127.0.0.1';
 		} else {
-			// spin up email server
 			shell_exec( 'bash ' . plugin_dir_path( __FILE__ ) . '../vendor/tedivm/dovecottesting/SetupEnvironment.sh' );
 		}
 
@@ -53,7 +55,16 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 	}
 
 	/**
-	* Close mailbox connection.
+	* Before every test: connect to mailserver.
+	*
+	* @since    1.1
+	*/
+	public function setUp() {
+		self::$mailserver->open_mailbox_connection( self::$connection_options );
+	}
+
+	/**
+	* After every test: close mailbox connection.
 	*
 	* @since    1.1
 	*/
@@ -67,6 +78,8 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 	* @since    1.1
 	*/
 	public function test_open_mailbox_connection_with_bad_options_should_throw_exception() {
+		self::$mailserver->close_connection();
+
 		$connection_options = self::$connection_options;
 		$connection_options['hostspec'] = 'mail.example.com';
 
@@ -85,6 +98,8 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 	* @since    1.1
 	*/
 	public function test_open_mailbox_connection_IMAP() {
+		self::$mailserver->close_connection();
+
 		$return = self::$mailserver->open_mailbox_connection( self::$connection_options );
 		$this->assertTrue( $return );
 	}
@@ -95,6 +110,8 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 	* @since    1.1
 	*/
 	public function test_open_mailbox_connection_POP3() {
+		self::$mailserver->close_connection();
+
 		$connection_options = self::$connection_options;
 		$connection_options['protocol'] = 'POP3';
 		$connection_options['port'] = 110;
@@ -103,16 +120,64 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 	}
 
 	/**
-	* Test checking mailbox and finding new messages.
+	* Test retrieving message IDs from the mailbox.
 	*
 	* @since    1.1
 	*/
 	public function test_get_messages() {
-		self::$mailserver->open_mailbox_connection( self::$connection_options );
 		$uids = self::$mailserver->get_messages();
 		$this->assertNotEmpty( $uids );
 		$this->assertCount( 3, $uids );
-		$this->assertEquals( 8, $uids[0] );
+		$this->assertEquals( self::$first_message_id, $uids[0] );
 	}
 
+	/**
+	* Test getting message headers.
+	*
+	* @since    1.1
+	*/
+	public function test_get_message_headers() {
+		$headers = self::$mailserver->get_message_headers( self::$first_message_id );
+		$this->assertInternalType( 'array', $headers );
+		$this->assertNotEmpty( $headers );
+		$this->assertArrayHasKey( 'Date', $headers );
+		$this->assertArrayHasKey( 'Subject', $headers );
+		$this->assertArrayHasKey( 'From', $headers );
+		$this->assertInternalType( 'string', $headers['From'] );
+	}
+
+	/**
+	* Test getting message body.
+	*
+	* @since    1.1
+	*/
+	public function test_get_message_body() {
+		$body = self::$mailserver->get_message_body( self::$first_message_id );
+		$this->assertNotEmpty( $body );
+	}
+
+	/**
+	* Test getting message attachments.
+	*
+	* @since    1.1
+	*/
+	public function test_get_attachments() {
+		$attachments = self::$mailserver->get_attachments( self::$first_message_id );
+		$this->assertInternalType( 'array', $attachments );
+		$this->markTestIncomplete( 'Pending message ID with attachments' );
+	// 	$this->assertNotEmpty( $attachments );
+	}
+
+	/**
+	* Test marking message IDs as read.
+	*
+	* @since    1.1
+	*/
+	public function test_mark_as_read() {
+		$result = self::$mailserver->mark_as_read( array( self::$first_message_id ) );
+		$this->assertTrue( $result );
+
+		$uids = self::$mailserver->get_messages();
+		$this->assertNotContains( 8, $uids );
+	}
 }

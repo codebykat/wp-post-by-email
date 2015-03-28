@@ -1,6 +1,6 @@
 <?php
 /**
- * Post By Email Mailserver Unit Tests - Horde library
+ * Post By Email Mailserver Unit Tests - IMAP bindings
  *
  * @package   PostByEmail
  * @author    Kat Hagan <kat@codebykat.com>
@@ -10,19 +10,19 @@
  */
 
 /**
- * Mailserver test class - Horde library.
+ * Mailserver test class - IMAP bindings.
  *
  * @package PostByEmail
  * @author  Kat Hagan <kat@codebykat.com>
  * @group PostByEmailMailserver
- * @group PostByEmailMailserverLibraryHorde
+ * @group PostByEmailMailserverLibraryIMAP
  * @group PostByEmailMailserverProtocolIMAP
- * @group PostByEmailMailserverHorde_IMAP
+ * @group PostByEmailMailserverIMAP_IMAP
  */
 
 require_once( 'test-post-by-email-mailserver.php' );
 
-class Tests_Post_By_Email_Mailserver_Horde extends Tests_Post_By_Email_Mailserver {
+class Tests_Post_By_Email_Mailserver_IMAP extends Tests_Post_By_Email_Mailserver {
 	/**
 	* Set up the tests.
 	*
@@ -30,6 +30,6 @@ class Tests_Post_By_Email_Mailserver_Horde extends Tests_Post_By_Email_Mailserve
 	*/
 	public static function setUpBeforeClass() {
 		parent::setUpBeforeClass();
-		self::$mailserver = new Post_By_Email_Mailserver_Horde();
+		self::$mailserver = new Post_By_Email_Mailserver_IMAP();
 	}
 }

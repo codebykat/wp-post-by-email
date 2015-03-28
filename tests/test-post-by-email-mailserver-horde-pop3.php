@@ -1,6 +1,6 @@
 <?php
 /**
- * Post By Email Mailserver Unit Tests - Horde library
+ * Post By Email Mailserver Unit Tests - Horde library - POP3
  *
  * @package   PostByEmail
  * @author    Kat Hagan <kat@codebykat.com>
@@ -10,19 +10,19 @@
  */
 
 /**
- * Mailserver test class - Horde library.
+ * Mailserver test class - Horde library - POP3.
  *
  * @package PostByEmail
  * @author  Kat Hagan <kat@codebykat.com>
  * @group PostByEmailMailserver
  * @group PostByEmailMailserverLibraryHorde
- * @group PostByEmailMailserverProtocolIMAP
- * @group PostByEmailMailserverHorde_IMAP
+ * @group PostByEmailMailserverProtocolPOP3
+ * @group PostByEmailMailserverHorde_POP3
  */
 
-require_once( 'test-post-by-email-mailserver.php' );
+require_once( 'test-post-by-email-mailserver-pop3.php' );
 
-class Tests_Post_By_Email_Mailserver_Horde extends Tests_Post_By_Email_Mailserver {
+class Tests_Post_By_Email_Mailserver_Horde_POP3 extends Tests_Post_By_Email_Mailserver_POP3 {
 	/**
 	* Set up the tests.
 	*

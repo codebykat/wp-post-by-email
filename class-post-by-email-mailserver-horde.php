@@ -128,14 +128,17 @@ class Post_By_Email_Mailserver_Horde extends Post_By_Email_Mailserver {
 		}
 
 		$flag = Horde_Imap_Client::FLAG_SEEN;
-		if ( $delete || ( 'POP3' === $this->protocol ) )
+		if ( $delete || ( 'POP3' === $this->protocol ) ) {
 			$flag = Horde_Imap_Client::FLAG_DELETED;
+		}
 
 		$this->connection->store( 'INBOX', array(
 				'add' => array( $flag ),
 				'ids' => $uids,
 			)
 		);
+
+		$this->connection->expunge( 'INBOX' );
 
 		return true;
 	}
@@ -165,6 +168,7 @@ class Post_By_Email_Mailserver_Horde extends Post_By_Email_Mailserver {
 
 		$list = $this->connection->fetch( 'INBOX', $query, array(
 				'ids' => $uid,
+				'peek' => true,
 			)
 		);
 
@@ -184,6 +188,7 @@ class Post_By_Email_Mailserver_Horde extends Post_By_Email_Mailserver {
 
 		$list2 = $this->connection->fetch( 'INBOX', $query2, array(
 				'ids' => $uid,
+				'peek' => true,
 			)
 		);
 
@@ -250,19 +255,28 @@ class Post_By_Email_Mailserver_Horde extends Post_By_Email_Mailserver {
 			}
 
 			$name = $p->getName();
+			$type = $p->getType();
+
+			if ( 'inline' === $disposition && 'text/plain' === $type ) {
+				// don't count the message body as an attachment
+				continue;
+			}
+
+			print "attachment";
+
 			if ( ! $name ) {
 				// sometimes (usually with inline images), we don't have a filename
 				// this will call it something like inline-1.jpg
 				$allowed_extensions = get_allowed_mime_types();
-				$possible_extensions = array_search( $p->getType(), $allowed_extensions );
-				$ext = array_shift( explode( '|', $possible_extensions ) );
+				$possible_extensions = explode( '|', array_search( $type, $allowed_extensions ) );
+				$ext = array_shift( $possible_extensions );
 				$name = $disposition . '-' . ( count( $attachments ) + 1 ) . '.' . $ext;
 			}
 
 			$new_attachment = array(
 				'disposition' => $disposition,
 				'type'        => $p->getPrimaryType(),
-				'mimetype'    => $p->getType(),
+				'mimetype'    => $type,
 				'mime_id'     => $key,
 				'name'        => $name,
 			);

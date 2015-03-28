@@ -14,6 +14,7 @@
  *
  * @package PostByEmail
  * @author  Kat Hagan <kat@codebykat.com>
+ * @group PostByEmailMailserver
  * @group PostByEmailMailserverHorde
  */
 
@@ -25,8 +26,8 @@ class Tests_Post_By_Email_Mailserver_Horde extends Tests_Post_By_Email_Mailserve
 	*
 	* @since    1.1
 	*/
-	public function setUp() {
-		parent::setUp();
-		$this->mailserver = new Post_By_Email_Mailserver_Horde();
+	public static function setUpBeforeClass() {
+		parent::setUpBeforeClass();
+		self::$mailserver = new Post_By_Email_Mailserver_Horde();
 	}
 }

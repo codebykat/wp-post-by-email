@@ -24,10 +24,10 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 	 *
 	 * @var     object
 	 */
-	protected $mailserver;
+	protected static $mailserver;
 
 	// DovecotTesting config
-	static $connection_options = array(
+	protected static $connection_options = array(
 		'protocol' => 'IMAP',
 		'username' => 'testuser',
 		'password' => 'applesauce',
@@ -41,9 +41,7 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 	*
 	* @since    1.1
 	*/
-	public function setUp() {
-		parent::setUp();
-
+	public static function setUpBeforeClass() {
 		if ( getenv( 'TRAVIS') ) {
 			self::$connection_options['hostspec'] = '127.0.0.1';
 		} else {
@@ -51,11 +49,16 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 			shell_exec( 'bash ' . plugin_dir_path( __FILE__ ) . '../vendor/tedivm/dovecottesting/SetupEnvironment.sh' );
 		}
 
-		// child classes MUST instantiate $this->mailserver in their setUp() functions.
+		// child classes MUST instantiate self::$mailserver in their setUpBeforeClass() functions.
 	}
 
+	/**
+	* Close mailbox connection.
+	*
+	* @since    1.1
+	*/
 	public function tearDown() {
-		$this->mailserver->close_connection();
+		self::$mailserver->close_connection();
 	}
 
 	/**
@@ -68,7 +71,7 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 		$connection_options['hostspec'] = 'mail.example.com';
 
 		try {
-			$this->mailserver->open_mailbox_connection( $connection_options );
+			self::$mailserver->open_mailbox_connection( $connection_options );
 		} catch ( Exception $e ) {
 			$this->assertNotNull( $e->getMessage() );
 			return;
@@ -82,7 +85,7 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 	* @since    1.1
 	*/
 	public function test_open_mailbox_connection_IMAP() {
-		$return = $this->mailserver->open_mailbox_connection( self::$connection_options );
+		$return = self::$mailserver->open_mailbox_connection( self::$connection_options );
 		$this->assertTrue( $return );
 	}
 
@@ -95,20 +98,21 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 		$connection_options = self::$connection_options;
 		$connection_options['protocol'] = 'POP3';
 		$connection_options['port'] = 110;
-		$return = $this->mailserver->open_mailbox_connection( $connection_options );
+		$return = self::$mailserver->open_mailbox_connection( $connection_options );
 		$this->assertTrue( $return );
 	}
-
 
 	/**
 	* Test checking mailbox and finding new messages.
 	*
 	* @since    1.1
 	*/
-	public function test_get_messages_got_mail() {
-		$this->mailserver->open_mailbox_connection( self::$connection_options );
-		$uids = $this->mailserver->get_messages();
+	public function test_get_messages() {
+		self::$mailserver->open_mailbox_connection( self::$connection_options );
+		$uids = self::$mailserver->get_messages();
 		$this->assertNotEmpty( $uids );
+		$this->assertCount( 3, $uids );
+		$this->assertEquals( 8, $uids[0] );
 	}
 
 }

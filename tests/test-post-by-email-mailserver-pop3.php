@@ -29,6 +29,21 @@ abstract class Tests_Post_By_Email_Mailserver_POP3 extends Tests_Post_By_Email_M
 	);
 
 	/**
+	* Before all tests: set options and start up / reset the test mailserver.
+	*
+	* @since    1.1
+	*/
+	public static function setUpBeforeClass() {
+		if ( getenv( 'TRAVIS') ) {
+			self::$connection_options['hostspec'] = '127.0.0.1';
+		} else {
+			shell_exec( 'bash ' . plugin_dir_path( __FILE__ ) . '../vendor/tedivm/dovecottesting/SetupEnvironment.sh' );
+		}
+
+		// child classes MUST instantiate self::$mailserver in their setUpBeforeClass() functions.
+	}
+
+	/**
 	* Before every test: connect to mailserver.
 	*
 	* @since    1.1

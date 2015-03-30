@@ -77,7 +77,7 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 	public function test_open_mailbox_connection_with_bad_options_should_throw_exception( $connection_options = null ) {
 		self::$mailserver->close_connection();
 
-		$connection_options = $connection_options ?: self::$connection_options;
+		$connection_options = $connection_options ? $connection_options : self::$connection_options;
 		$connection_options['hostspec'] = 'mail.example.com';
 
 		try {
@@ -97,7 +97,7 @@ abstract class Tests_Post_By_Email_Mailserver extends WP_UnitTestCase {
 	public function test_open_mailbox_connection( $connection_options = null ) {
 		self::$mailserver->close_connection();
 
-		$connection_options = $connection_options ?: self::$connection_options;
+		$connection_options = $connection_options ? $connection_options : self::$connection_options;
 
 		$return = self::$mailserver->open_mailbox_connection( $connection_options );
 		$this->assertTrue( $return );

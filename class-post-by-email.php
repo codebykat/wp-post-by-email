@@ -616,36 +616,31 @@ class Post_By_Email {
 			return current_time( 'timestamp', true );
 		}
 
-		$dmonths = array( 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' );
-
-		// of the form '20 Mar 2002 20:32:37'
-		$ddate = trim( $date );
-		if ( strpos( $ddate, ',' ) ) {
-			$ddate = trim( substr( $ddate, strpos( $ddate, ',' ) + 1, strlen( $ddate ) ) );
+		$date = trim( $date );
+		if ( strpos( $date, ',' ) ) {
+			// if the day of the week is provided, remove it (e.g. "Fri, 27 Mar...")
+			$date = trim( substr( $date, strpos( $date, ',' ) + 1, strlen( $date ) ) );
 		}
 
-		$date_arr = explode( ' ', $ddate );
-		$date_time = explode( ':', $date_arr[3] );
+		$date_pieces = explode( ' ', $date );
+		$time_pieces = explode( ':', $date_pieces[3] );
 
-		$ddate_H = $date_time[0];
-		$ddate_i = $date_time[1];
-		$ddate_s = $date_time[2];
+		// http://cr.yp.to/immhf/date.html
+		// ex: '27 Mar 2015 01:40:04 +0000'
+		$format = 'd M Y H:i';
 
-		$ddate_m = $date_arr[1];
-		$ddate_d = $date_arr[0];
-		$ddate_Y = $date_arr[2];
-
-		for ( $j = 0; $j < 12; $j++ ) {
-			if ( $ddate_m == $dmonths[$j] ) {
-				$ddate_m = $j+1;
-			}
+		// seconds are optional
+		if ( count( $time_pieces ) > 2 ) {
+			$format .= ':s';
 		}
 
-		$time_zn = intval( $date_arr[4] ) * 36;
-		$ddate_U = gmmktime( $ddate_H, $ddate_i, $ddate_s, $ddate_m, $ddate_d, $ddate_Y );
-		$ddate_U = $ddate_U - $time_zn;
+		// timezone is optional
+		if( count( $date_pieces ) > 4 ) {
+			$format .= ' O';
+		}
 
-		return $ddate_U;
+		$datetime = date_create_from_format( $format, $date );
+		return date_timestamp_get( $datetime );
 	}
 
 	/**

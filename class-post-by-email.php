@@ -210,6 +210,16 @@ class Post_By_Email {
 		$this->check_email();
 
 		$args = array( 'page' => 'post-by-email', 'tab' => 'log' );
+		$this->redirect( $args );
+	}
+
+	/**
+	 * Do a wp_safe_redirect.
+	 *
+	 * @since    1.1
+	 * @codeCoverageIgnore
+	 */
+	protected function redirect( $args ) {
 		wp_safe_redirect( add_query_arg( $args, admin_url( 'tools.php' ) ) );
 	}
 
@@ -492,7 +502,7 @@ class Post_By_Email {
 	public function get_admin_id() {
 		global $wpdb;
 
-		$id = $wpdb->get_var( "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key='wp_capabilities' AND meta_value LIKE '%administrator%' ORDER BY user_id LIMIT 1" );
+		$id = $wpdb->get_var( "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key LIKE 'wp%_capabilities' AND meta_value LIKE '%administrator%' ORDER BY user_id LIMIT 1" );
 		return $id;
 	}
 

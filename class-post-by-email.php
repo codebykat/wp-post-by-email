@@ -94,6 +94,7 @@ class Post_By_Email {
 	 * Initialize the plugin by setting localization, filters, and administration functions.
 	 *
 	 * @since     0.9.0
+	 * @codeCoverageIgnore
 	 */
 	private function __construct() {
 		// Load plugin text domain
@@ -119,6 +120,8 @@ class Post_By_Email {
 	 * @since     0.9.0
 	 *
 	 * @return    object    A single instance of this class.
+	 *
+	 * @codeCoverageIgnore
 	 */
 	public static function get_instance() {
 
@@ -187,6 +190,7 @@ class Post_By_Email {
 	 * Load the plugin text domain for translation.
 	 *
 	 * @since    0.9.0
+	 * @codeCoverageIgnore
 	 */
 	public function load_plugin_textdomain() {
 		$domain = $this->plugin_slug;
@@ -485,7 +489,7 @@ class Post_By_Email {
 	 *
 	 * @return   integer    $id
 	 */
-	protected function get_admin_id() {
+	public function get_admin_id() {
 		global $wpdb;
 
 		$id = $wpdb->get_var( "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key='wp_capabilities' AND meta_value LIKE '%administrator%' ORDER BY user_id LIMIT 1" );
@@ -501,10 +505,10 @@ class Post_By_Email {
 	 *
 	 * @return   string|false
 	 */
-	protected function get_message_author( $headers ) {
 		// Set the author using the email address (From or Reply-To, the last used)
 		$author = $headers['From'];
 		// $replyto = $headers['Reply-To'];  // this is not used and doesn't make sense
+	public function get_message_author( $headers ) {
 
 		if ( preg_match( '|[a-z0-9_.-]+@[a-z0-9_.-]+(?!.*<)|i', $author, $matches ) )
 			$author = $matches[0];
@@ -528,6 +532,8 @@ class Post_By_Email {
 	 * @param    array    $options    Options array
 	 *
 	 * @return   bool
+	 *
+	 * @codeCoverageIgnore
 	 */
 	protected function open_mailbox( $connection_options ) {
 		return self::$mailserver->open_mailbox_connection( $connection_options );
@@ -537,6 +543,7 @@ class Post_By_Email {
 	* Closes the connection to the mailserver.
 	*
 	* @since    1.0.4
+	* @codeCoverageIgnore
 	*/
 	protected function close_mailbox() {
 		return self::$mailserver->close_connection();
@@ -548,6 +555,8 @@ class Post_By_Email {
 	 * @since    1.0.0
 	 *
 	 * @return   array    Array of message UIDs
+	 *
+	 * @codeCoverageIgnore
 	 */
 	protected function get_messages() {
 		return self::$mailserver->get_messages();
@@ -561,6 +570,8 @@ class Post_By_Email {
 	 * @param    int    $uid    Message UID
 	 *
 	 * @return   object
+	 *
+	 * @codeCoverageIgnore
 	 */
 	protected function get_message_headers( $uid ) {
 		return self::$mailserver->get_message_headers( $uid );
@@ -574,6 +585,8 @@ class Post_By_Email {
 	 * @param    int       Message UID
 	 *
 	 * @return   string    Message content
+	 *
+	 * @codeCoverageIgnore
 	 */
 	protected function get_message_body( $uid ) {
 		return self::$mailserver->get_message_body( $uid );
@@ -588,7 +601,7 @@ class Post_By_Email {
 	 *
 	 * @return   string
 	 */
-	protected function get_message_date( $headers ) {
+	public function get_message_date( $headers ) {
 		$date = $headers['Date'];
 		if ( ! $date ) {
 			return current_time( 'timestamp', true );
@@ -652,6 +665,8 @@ class Post_By_Email {
 	 * @param    int       Message UID
 	 *
 	 * @return   array     Message attachments
+	 *
+	 * @codeCoverageIgnore
 	 */
 	protected function get_attachments( $uid ) {
 		return self::$mailserver->get_attachments( $uid );
@@ -666,6 +681,8 @@ class Post_By_Email {
 	 * @param    mime_id   Attachment's MIME ID
 	 *
 	 * @return   string    Decoded attachment data
+	 *
+	 * @codeCoverageIgnore
 	 */
 	protected function get_single_attachment( $id, $mime_id ) {
 		return self::$mailserver->get_single_attachment( $id, $mime_id );
@@ -681,7 +698,7 @@ class Post_By_Email {
 	 *
 	 * @return   int       Number of attachments saved
 	 */
-	protected function save_attachments( $uid, $postID ) {
+	public function save_attachments( $uid, $postID ) {
 		$image_types = array( 'image/jpeg', 'image/jpg', 'image/png', 'image/gif' );
 
 		$attachments = $this->get_attachments( $uid );
@@ -757,7 +774,7 @@ class Post_By_Email {
 	 * @param    string    $log_message    The message return by the post.
 	 * @param    string    $author_email   Email from which post originated.
 	 */
-	protected function send_response( $success, $subject, $log_message, $author_email ) {
+	public function send_response( $success, $subject, $log_message, $author_email ) {
 		// Set the header as HTML content type
 		$headers[] = 'Content-type: text/html';
 
@@ -781,7 +798,7 @@ class Post_By_Email {
 	 *
 	 * @return   array     $args         Shortcode arguments
 	 */
-	protected function find_shortcode( $shortcode, $text ) {
+	public function find_shortcode( $shortcode, $text ) {
 		if ( preg_match( "/\[$shortcode\s(.*?)\]/i", $text, $matches ) ) {
 			return explode( ' ', $matches[1] );
 		}
@@ -797,7 +814,7 @@ class Post_By_Email {
 	 *
 	 * @return   string    $text         Filtered text
 	 */
-	protected function filter_valid_shortcodes( $text ) {
+	public function filter_valid_shortcodes( $text ) {
 		$valid_shortcodes = array( 'tag', 'category', 'pin', 'post-format' );
 
 		// get all registered custom taxonomies
@@ -826,7 +843,7 @@ class Post_By_Email {
 	 *
 	 * @param    string    $message    Error to save to the log.
 	 */
-	protected function save_error_message( $message ) {
+	public function save_error_message( $message ) {
 		$this->save_log_message( $message, true );
 	}
 
@@ -837,7 +854,7 @@ class Post_By_Email {
 	 *
 	 * @param    string    $message    Message to save to the log.
 	 */
-	protected function save_log_message( $message, $error=false ) {
+	public function save_log_message( $message, $error=false ) {
 		$log = get_option( 'post_by_email_log', array() );
 
 		array_unshift( $log, array(
@@ -862,6 +879,7 @@ class Post_By_Email {
 	 * Set the plugin include path and register the autoloader.
 	 *
 	 * @since 0.9.7
+	 * @codeCoverageIgnore
 	 */
 	public static function load() {
 		self::$path = dirname( __FILE__ );
@@ -874,6 +892,8 @@ class Post_By_Email {
 	 * @since 0.9.7
 	 *
 	 * @param    string    $class    Class name of requested object.
+	 *
+	 * @codeCoverageIgnore
 	 */
 	public static function autoload( $class ) {
 		// We're only interested in autoloading Horde includes.

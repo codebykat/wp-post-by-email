@@ -15,6 +15,7 @@
  * @package PostByEmail
  * @author  Kat Hagan <kat@codebykat.com>
  * @group   PostByEmailCore
+ * @coversDefaultClass Post_By_Email
  */
 class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 
@@ -36,9 +37,11 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		parent::setUp();
 		$this->plugin = Post_By_Email::get_instance();
 		$options = Post_By_Email::$default_options;
-		$option['status'] = '';
+		$options['status'] = '';
 		update_option( 'post_by_email_options', $options );
 	}
+
+	/** HELPER FUNCTIONS **/
 
 	/**
 	* Set an option in the plugin's options array.
@@ -84,10 +87,14 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		return 'Nothing logged.';
 	}
 
+
+	/** TESTS **/
+
 	/**
 	* Test plugin activation.
 	*
 	* @since    0.9.7
+	* @covers   ::activate
 	*/
 	public function test_plugin_activation() {
 		// with no preexisting options and no global ones, use defaults
@@ -115,6 +122,8 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	* Test setup of wp_cron on activate/deactivate.
 	*
 	* @since    0.9.8
+	* @covers   ::activate
+	* @covers   ::deactivate
 	*/
 	public function test_wp_cron_setup() {
 		// plugin activation should schedule an event with wp_cron
@@ -130,6 +139,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	* Test that plugin does nothing if options haven't been set.
 	*
 	* @since    1.0.4
+	* @covers   ::check_email
 	*/
 	public function test_return_if_options_not_set() {
 		$this->set_option( 'mailserver_url', 'mail.example.com' );
@@ -141,10 +151,10 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 
 		// should immediately return without doing anything
 		$stub->expects( $this->never() )
-			->method( 'open_mailbox' );
+		     ->method( 'open_mailbox' );
 
 		$stub->expects( $this->never() )
-			->method( 'get_messages' );
+		     ->method( 'get_messages' );
 
 		$this->assertEquals( 'Nothing logged.', $this->get_last_log_message() );
 	}
@@ -153,6 +163,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	* Test checking mailbox with no new messages found.
 	*
 	* @since    1.0.4
+	* @covers   ::check_email
 	*/
 	public function test_check_email_no_new_messages() {
 		$stub = $this->getMock( 'Post_By_Email', array( 'open_mailbox', 'get_messages', 'close_mailbox' ), array(), '', false );
@@ -170,21 +181,21 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 			'username' => 'test@test.com',
 			'password' => 'password',
 			'hostspec' => 'mail.test.com',
-			'port' => 110,
-			'secure' => false,
+			'port'     => 110,
+			'secure'   => false,
 		);
 
 		$stub->expects( $this->once() )
-			->method( 'open_mailbox' )
-			->with( $this->equalTo( $connection_options ) )
-			->will( $this->returnValue( true ) );
+		     ->method( 'open_mailbox' )
+		     ->with( $this->equalTo( $connection_options ) )
+		     ->will( $this->returnValue( true ) );
 
 		$stub->expects( $this->once() )
-			->method( 'get_messages' )
-			->will( $this->returnValue( array() ) );
+		     ->method( 'get_messages' )
+		     ->will( $this->returnValue( array() ) );
 
 		$stub->expects( $this->once() )
-			->method( 'close_mailbox' );
+		     ->method( 'close_mailbox' );
 
 		$stub->check_email();
 
@@ -195,10 +206,9 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	* Test checking mailbox and finding a new message.
 	*
 	* @since    1.0.4
+	* @covers   ::check_email
 	*/
 	public function test_check_mail() {
-		$this->set_option( 'status', '' );
-
 		$methods_to_stub = array(
 			'open_mailbox',
 			'get_messages',
@@ -211,15 +221,15 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		$stub = $this->getMock( 'Post_By_Email', $methods_to_stub, array(), '', false );
 
 		$stub->expects( $this->once() )
-			->method( 'open_mailbox' )
-			->will( $this->returnValue( true ) );
+		     ->method( 'open_mailbox' )
+		     ->will( $this->returnValue( true ) );
 
 		$message_text = file_get_contents( 'messages/message_with_attachments', true );
 		$headers = Horde_Mime_Headers::parseHeaders( $message_text );
 
 		$stub->expects( $this->once() )
-			->method( 'get_messages' )
-			->will( $this->returnValue( array( 1 ) ) );
+		     ->method( 'get_messages' )
+		     ->will( $this->returnValue( array( 1 ) ) );
 
 		$headers_array = array(
 			'Date'    => $headers->getValue( 'Date' ),
@@ -228,85 +238,165 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		);
 
 		$stub->expects( $this->once() )
-			->method( 'get_message_headers' )
-			->will( $this->returnValue( $headers_array ) );
+		     ->method( 'get_message_headers' )
+		     ->will( $this->returnValue( $headers_array ) );
 
 		$message = Horde_Mime_Part::parseMessage( $message_text );
-		$body = $message->getPart('1.1')->toString();
+		$body = $message->getPart( '1.1' )->toString();
 
 		$stub->expects( $this->once() )
-			->method( 'get_message_body' )
-			->will( $this->returnValue( $body ) );
+		     ->method( 'get_message_body' )
+		     ->will( $this->returnValue( $body ) );
 
 		$stub->expects( $this->once() )
-			->method( 'save_attachments' );
+		     ->method( 'save_attachments' );
 
 		$stub->expects( $this->once() )
-			->method( 'mark_as_read' );
+		     ->method( 'mark_as_read' );
 
 		$stub->expects( $this->once() )
-			->method( 'close_mailbox' );
+		     ->method( 'close_mailbox' );
 
 		$stub->check_email();
 
 		$this->stringContains( "Found 1 new message.", $this->get_last_log_message() );
 		$this->assertRegExp( '/Posted(.*?)' . $headers->getValue('Subject') . '/', $this->get_last_log_message() );
-	}
 
-	/**
-	* Test that checking mail properly sets the last checked time.
-	*
-	* @since    1.1
-	*/
-	public function test_checking_mail_sets_last_checked_time_to_now() {
-		// This will test $stub->manual_check_email();
-		$this->markTestIncomplete();
+		// make sure we set the last checked time
+		$timestamp = current_time( 'timestamp', true );
+		$last_checked = $this->get_option( 'last_checked' );
+		$this->assertEquals( $timestamp, $last_checked );
 	}
 
 	/**
 	* Test that checking mail properly reschedules the next check.
 	*
 	* @since    1.1
+	* @covers   ::manual_check_email
 	*/
-	public function test_checking_mail_schedules_the_next_check_for_an_hour_from_now() {
-		// This will test $stub->check_email();
-		$this->markTestIncomplete();
+	public function test_checking_mail_reschedules_the_next_automatic_check() {
+		$stub = $this->getMock( 'Post_By_Email', array( 'check_email', 'redirect' ), array(), '', false );
+
+		$stub->expects( $this->once() )
+		     ->method( 'check_email' );
+
+		$stub->expects( $this->once() )
+		     ->method( 'redirect' );
+
+		$timestamp = current_time( 'timestamp', true ) + HOUR_IN_SECONDS;
+		$stub->manual_check_email();
+
+		$next_scheduled = wp_next_scheduled( 'post-by-email-wp-mail.php' );
+		$this->assertNotFalse( $next_scheduled );
+		$this->assertEquals( $timestamp, $next_scheduled );
 	}
 
 	/**
 	* Test getting the site's admin ID.
 	*
 	* @since    1.1
+	* @covers   ::get_admin_id
 	*/
 	public function test_get_admin_id() {
-		// This will test $stub->get_admin_id();
-		$this->markTestIncomplete();
+		$admin_email = get_option( 'admin_email' );
+		$admin = get_user_by( 'email', $admin_email );
+
+		$id = $this->plugin->get_admin_id();
+		$this->assertEquals( $admin->ID, $id );
 	}
 
 	/**
 	* Test getting the message author from the message headers.
 	*
 	* @since    1.1
+	* @covers   ::get_message_author
 	*/
-	public function test_get_message_author() {
-		// This will test $stub->get_message_author();
-		$this->markTestIncomplete();
+	public function test_get_message_author_returns_correct_author() {
+		$admin_email = get_option( 'admin_email' );
+		$headers = array( 'From' => $admin_email );
+		$author = $this->plugin->get_message_author( $headers );
+		$this->assertNotFalse( $author );
+		$this->assertEquals( $admin_email, $author );
+	}
+
+	/**
+	* Test getting the message author from the message headers with an invalid email.
+	*
+	* @since    1.1
+	* @covers   ::get_message_author
+	*/
+	public function test_get_message_author_returns_false_if_invalid() {
+		$headers = array( 'From' => 'not an email address' );
+		$author = $this->plugin->get_message_author( $headers );
+		$this->assertFalse( $author );
+	}
+
+	/**
+	* Getting the message date from headers should return current time if invalid.
+	*
+	* @since    1.1
+	* @covers   ::get_message_date
+	*/
+	public function test_get_message_date_returns_now_if_invalid() {
+		$headers = array( 'Date' => '' );
+		$timestamp = current_time( 'timestamp', true );
+		$date = $this->plugin->get_message_date( $headers );
+		$this->assertEquals( $timestamp, $date );
 	}
 
 	/**
 	* Test getting the message date from the message headers.
 	*
 	* @since    1.1
+	* @covers   ::get_message_date
 	*/
-	public function test_get_message_date() {
-		// This will test $stub->get_message_date();
-		$this->markTestIncomplete();
+	public function test_get_message_date_returns_correct_timestamp() {
+		$headers = array( 'Date' => 'Fri, 27 Mar 2015 01:40:04 +0000' );
+		$date = $this->plugin->get_message_date( $headers );
+		$this->assertEquals( 1427420404, $date );
+	}
+
+	/**
+	* Test getting the message date from the message headers, without the day name.
+	*
+	* @since    1.1
+	* @covers   ::get_message_date
+	*/
+	public function test_get_message_date_returns_correct_timestamp_without_day_name() {
+		$headers = array( 'Date' => '27 Mar 2015 01:40:04 +0000' );
+		$date = $this->plugin->get_message_date( $headers );
+		$this->assertEquals( 1427420404, $date );
+	}
+
+	/**
+	* Test getting the message date from the message headers, without the timezone.
+	*
+	* @since    1.1
+	* @covers   ::get_message_date
+	*/
+	public function test_get_message_date_returns_correct_timestamp_without_timezone() {
+		$headers = array( 'Date' => 'Fri, 27 Mar 2015 01:40:04' );
+		$date = $this->plugin->get_message_date( $headers );
+		$this->assertEquals( 1427420404, $date );
+	}
+
+	/**
+	* Test getting the message date from the message headers, without the seconds.
+	*
+	* @since    1.1
+	* @covers   ::get_message_date
+	*/
+	public function test_get_message_date_returns_correct_timestamp_without_seconds() {
+		$headers = array( 'Date' => 'Fri, 27 Mar 2015 01:40 +0000' );
+		$date = $this->plugin->get_message_date( $headers );
+		$this->assertEquals( 1427420400, $date );
 	}
 
 	/**
 	* Test getting the message attachments and uploading them to a post.
 	*
 	* @since    1.1
+	* @covers   ::save_attachments
 	*/
 	public function test_save_attachments() {
 		// This will test $stub->save_attachments();
@@ -317,6 +407,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	* Test sending an email response.
 	*
 	* @since    1.1
+	* @covers   ::send_response
 	*/
 	public function test_send_response() {
 		// This will test $stub->send_response();
@@ -327,6 +418,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	* Test finding a shortcode in the message content and returning its arguments.
 	*
 	* @since    1.1
+	* @covers   ::find_shortcode
 	*/
 	public function test_find_shortcode() {
 		// This will test $stub->find_shortcode();
@@ -334,17 +426,60 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	}
 
 	/**
-	* Test saving a log message.
+	* Test filtering shortcodes out of the message content.
 	*
 	* @since    1.1
+	* @covers   ::filter_valid_shortcodes
 	*/
 	public function test_filter_valid_shortcodes() {
 		// This will test $stub->filter_valid_shortcodes();
 		$this->markTestIncomplete();
 	}
 
+	/**
+	* Test saving a log message.
+	*
+	* @since    1.1
+	* @covers   ::save_log_message
+	*/
 	public function test_save_log_message() {
-		// This will test $stub->save_log_message();
-		$this->markTestIncomplete();
+		$log_message = 'This is a test.';
+		$timestamp = current_time( 'timestamp' );
+		$this->plugin->save_log_message( $log_message );
+
+		$log = get_option( 'post_by_email_log' );
+		$this->assertNotEmpty( $log );
+
+		$last_entry = array_shift( $log );
+		$this->assertEquals( $timestamp, $last_entry['timestamp'] );
+		$this->assertEquals( $log_message, $last_entry['message'] );
+
+		$status = $this->get_option( 'status' );
+		$this->assertNotEquals( 'error', $status );
+	}
+
+	/**
+	* Test saving an error message.
+	*
+	* @since    1.1
+	* @covers   ::save_log_message
+	*/
+	public function test_save_error_message() {
+		$log_message = 'This is a test.';
+		$timestamp = current_time( 'timestamp' );
+		$this->plugin->save_error_message( $log_message );
+
+		$log = get_option( 'post_by_email_log' );
+		$this->assertNotEmpty( $log );
+
+		$last_entry = array_shift( $log );
+		$this->assertEquals( $timestamp, $last_entry['timestamp'] );
+		$this->assertEquals( $log_message, $last_entry['message'] );
+
+		$status = $this->get_option( 'status' );
+		$this->assertEquals( 'error', $status );
+
+		$transient = get_transient( 'post_by_email_last_checked' );
+		$this->assertFalse( $transient );
 	}
 }

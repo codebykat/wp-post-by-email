@@ -287,7 +287,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		$stub->manual_check_email();
 
 		$next_scheduled = wp_next_scheduled( 'post-by-email-wp-mail.php' );
-		$this->assertNotFalse( $next_scheduled );
+		$this->assertNotEquals( false, $next_scheduled );
 		$this->assertEquals( $timestamp, $next_scheduled );
 	}
 
@@ -315,7 +315,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		$admin_email = get_option( 'admin_email' );
 		$headers = array( 'From' => $admin_email );
 		$author = $this->plugin->get_message_author( $headers );
-		$this->assertNotFalse( $author );
+		$this->assertNotEquals( false, $author );
 		$this->assertEquals( $admin_email, $author );
 	}
 

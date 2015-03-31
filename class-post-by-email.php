@@ -515,20 +515,19 @@ class Post_By_Email {
 	 *
 	 * @return   string|false
 	 */
-		// Set the author using the email address (From or Reply-To, the last used)
-		$author = $headers['From'];
-		// $replyto = $headers['Reply-To'];  // this is not used and doesn't make sense
 	public function get_message_author( $headers ) {
+		// @todo it might make sense to use "Reply-To" if we don't have a match for "From"
+		$from_email = $headers['From'];
 
-		if ( preg_match( '|[a-z0-9_.-]+@[a-z0-9_.-]+(?!.*<)|i', $author, $matches ) )
-			$author = $matches[0];
+		if ( preg_match( '|[a-z0-9_.-]+@[a-z0-9_.-]+(?!.*<)|i', $from_email, $matches ) )
+			$from_email = $matches[0];
 		else
-			$author = trim( $author );
+			$from_email = trim( $from_email );
 
-		$author = sanitize_email( $author );
+		$from_email = sanitize_email( $from_email );
 
-		if ( is_email( $author ) ) {
-			return $author;
+		if ( is_email( $from_email ) ) {
+			return $from_email;
 		}
 
 		return false;  // author not found

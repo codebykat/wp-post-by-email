@@ -616,6 +616,9 @@ class Post_By_Email {
 			return current_time( 'timestamp', true );
 		}
 
+		// http://cr.yp.to/immhf/date.html
+		// ex: 'Fri, 27 Mar 2015 01:40:04 +0000'
+
 		$date = trim( $date );
 		if ( strpos( $date, ',' ) ) {
 			// if the day of the week is provided, remove it (e.g. "Fri, 27 Mar...")
@@ -625,22 +628,34 @@ class Post_By_Email {
 		$date_pieces = explode( ' ', $date );
 		$time_pieces = explode( ':', $date_pieces[3] );
 
-		// http://cr.yp.to/immhf/date.html
-		// ex: '27 Mar 2015 01:40:04 +0000'
-		$format = 'd M Y H:i';
+		$day = $date_pieces[0];
+		$month = $date_pieces[1];
+		$year = $date_pieces[2];
+
+		$hours = $time_pieces[0];
+		$minutes = $time_pieces[1];
 
 		// seconds are optional
+		$seconds = 0;
 		if ( count( $time_pieces ) > 2 ) {
-			$format .= ':s';
+			$seconds = $time_pieces[2];
 		}
 
 		// timezone is optional
+		$timezone_offset = 0;
 		if( count( $date_pieces ) > 4 ) {
-			$format .= ' O';
+			// @todo I think this is flawed
+			$timezone_offset = intval( $date_pieces[4] ) * 36;
 		}
 
-		$datetime = date_create_from_format( $format, $date );
-		return date_timestamp_get( $datetime );
+		// convert month to numeric
+		$month_names = array( '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' );
+		$month = array_search( $month, $month_names );
+
+		$gmt_timestamp = gmmktime( $hours, $minutes, $seconds, $month, $day, $year );
+		$timestamp = $gmt_timestamp - $timezone_offset;
+
+		return $timestamp;
 	}
 
 	/**

@@ -288,10 +288,12 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		$message = Horde_Mime_Part::parseMessage( $message_text );
 		$body = $message->getPart( '1.1' )->toString();
 
-		$stub->method( 'get_message_body' )
+		$stub->expects( $this->any() )
+		     ->method( 'get_message_body' )
 		     ->will( $this->returnValue( $body ) );
 
-		$stub->method( 'find_shortcode' )
+		$stub->expects( $this->any() )
+		     ->method( 'find_shortcode' )
 		     ->will( $this->returnValue( array() ) );
 
 		return $stub;

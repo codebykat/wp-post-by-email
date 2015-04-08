@@ -281,178 +281,18 @@ class Post_By_Email {
 		$log_message = sprintf( _n( 'Found 1 new message.', 'Found %s new messages.', sizeof( $uids ), 'post-by-email' ), sizeof( $uids ) );
 
 		$time_difference = get_option( 'gmt_offset' ) * HOUR_IN_SECONDS;
-		$phone_delim = '::';
 
 		foreach ( $uids as $uid ) {
-			// get headers
-			$headers = $this->get_message_headers( $uid );
-
-			/* Subject */
-			// Captures any text in the subject before $phone_delim as the subject
-			$subject = $headers['Subject'];
-			$subject = explode( $phone_delim, $subject );
-			$subject = $subject[0];
-			$subject = trim( $subject );
-
-
-			/* Author */
-			$from_email = $this->get_message_author( $headers );
-
-			$userdata = get_user_by( 'email', $from_email );
-			if ( ! empty( $userdata ) ) {
-				$post_author = $userdata->ID;
-
-				// Set $post_status based on author's publish_posts capability
-				$user = new WP_User( $post_author );
-				if ( $options['registered_pending'] ) {
-					$post_status =  'pending';
-				} else {
-					$post_status = ( $user->has_cap( 'publish_posts' ) ) ? 'publish' : 'pending';
-				}
-			} else {
-				if ( $options['discard_pending'] ) {
-					$post_log_message = sprintf( __( "No author match for %s (Subject: %s); skipping.", 'post-by-email' ),
-															$from_email, $subject );
-					$log_message .= '<br />' . $post_log_message;
-					// send response email for failure
-					if ( $options['send_response'] ) {
-						$this->send_response( FALSE, $subject, $post_log_message, $from_email );
-					}
-					continue;
-				}
-				// use admin if no author found
-				$post_author = $this->get_admin_id();
-				$post_status = 'pending';
-			}
-
-
-			/* Date */
-			$ddate_U = $this->get_message_date( $headers );
-			$post_date = gmdate( 'Y-m-d H:i:s', $ddate_U + $time_difference );
-			$post_date_gmt = gmdate( 'Y-m-d H:i:s', $ddate_U );
-
-
-			/* Message body */
-			$content = $this->get_message_body( $uid );
-
-			//Give Post-By-Email extending plugins full access to the content
-			//Either the raw content or the content of the last quoted-printable section
-			$content = apply_filters( 'wp_mail_original_content', $content );
-
-			// Captures any text in the body after $phone_delim as the body
-			$content = explode( $phone_delim, $content );
-			$content = empty( $content[1] ) ? $content[0] : $content[1];
-
-			$content = trim( $content );
-
-			// replace HTML-ized quotes with the real thing, so shortcode arguments work
-			$content = str_replace( array( '&#39;', '&quot;' ), array( "'", '"' ), $content );
-
-			$post_content = apply_filters( 'phone_content' , $content );
-
-			/* post title */
-			$post_title = xmlrpc_getposttitle( $content );
-
-			if ( '' == $post_title )
-				$post_title = $subject;
-
-			/* validate PIN */
-			if ( $options['pin_required'] ) {
-				$pin = $this->find_shortcode( 'pin', $post_content );
-				$pin = implode( $pin );
-
-				if ( $pin != $options['pin'] ) {
-					// security check failed - move on to the next message
-					$post_log_message = '"' . $post_title . '" ' . __( 'failed PIN authentication; discarding.', 'post-by-email' );
-					$log_message .= '<br />' . $post_log_message;
-					// send response email for failure
-					if ( $options['send_response'] ) {
-						$this->send_response( FALSE, $subject, $post_log_message, $from_email );
-					}
-					continue;
-				}
-			}
-
-
-			/* shortcode: categories. [category cat1 cat2...] */
-
-			$shortcode_categories = $this->find_shortcode( 'category', $post_content );
-			$post_category = array();
-			if ( empty( $shortcode_categories ) ) {
-				$post_category[] = $options['default_email_category'];
-			}
-			foreach ( $shortcode_categories as $cat ) {
-				if ( is_numeric( $cat ) ) {
-					$post_category[] = $cat;
-				} elseif ( get_category_by_slug( $cat ) ) {
-					$term = get_category_by_slug( $cat );
-					$post_category[] = $term->term_id;
-				} else {  // create new category
-					$new_category = wp_insert_term( $cat, 'category' );
-					if ( $new_category ) {
-						$post_category[] = $new_category['term_id'];
-					}
-				}
-			}
-
-			/* shortcode: tags. [tag tag1 tag2...] */
-
-			$tags_input = $this->find_shortcode( 'tag', $post_content );
-
-			$original_post_content = $post_content;
-			$post_content = $this->filter_valid_shortcodes( $post_content );
-
-
-			/* create the post */
-			$post_data = compact( 'post_content', 'post_title', 'post_date', 'post_date_gmt', 'post_author', 'post_category', 'post_status', 'tags_input' );
-			$post_data = wp_slash( $post_data );
-
-			$post_ID = wp_insert_post( $post_data );
-			if ( is_wp_error( $post_ID ) ) {
-				$log_message .= "\n" . $post_ID->get_error_message();
-				$this->save_error_message( $log_message );
-				// send response email for failure
-				if ( $options['send_response'] ) {
-					$this->send_response( FALSE, $subject, $post_ID->get_error_message(), $from_email );
-				}
-			}
+			$post_ID = $this->create_post( $uid, $time_difference, $log_message );
 
 			// We couldn't post, for whatever reason. Better move forward to the next email.
 			if ( empty( $post_ID ) )
 				continue;
 
-			// save original message sender as post_meta, in case we want it later
-			add_post_meta( $post_ID, 'original_author', $from_email );
-
-			/* shortcode: post-format. [post-format format] */
-			$post_format_input = $this->find_shortcode( 'post-format', $original_post_content );
-			if ( ! empty( $post_format_input ) )
-				set_post_format( $post_ID, $post_format_input[0] );
-
-			/* shortcode: custom taxonomies.  [taxname term1 term2 ...] */
-			$tax_input = array();
-
-			// get all registered custom taxonomies
-			$args = array(
-				'public'   => true,
-				'_builtin' => false,
-			);
-			$registered_taxonomies = get_taxonomies( $args, 'names', 'and' ); 
-
-			if ( $registered_taxonomies ) {
-				foreach ( $registered_taxonomies as $taxonomy_name ) {
-					$tax_shortcodes = $this->find_shortcode( $taxonomy_name, $original_post_content );
-					if ( count( $tax_shortcodes ) > 0 ) {
-						// pending bug fix: http://core.trac.wordpress.org/ticket/19373
-						//$tax_input[] = array( $taxonomy_name => $tax_shortcodes );
-						wp_set_post_terms( $post_ID, $tax_shortcodes, $taxonomy_name );
-					}
-				}
-			}
-
 			/* attachments */
 			$attachment_count = $this->save_attachments( $uid, $post_ID );
 
+			$post_content = get_post_field( 'post_content', $post_ID );
 			if ( $attachment_count > 0 && ! has_shortcode( $post_content, 'gallery' ) ) {
 
 				// add a default gallery if there isn't one already
@@ -466,12 +306,10 @@ class Post_By_Email {
 
 			do_action( 'publish_phone', $post_ID );
 
-			if ( '' == $post_title ) {
-				$post_title = __( '(no title)', 'post-by-email' );
-			}
+			$post_title = get_the_title( $post_ID ) ? get_the_title( $post_ID ) : __( '(no title)', 'post-by-email' );
 
 			$pending = '';
-			if ( 'pending' == $post_status ) {
+			if ( 'pending' == get_post_status( $post_ID ) ) {
 				$pending = __( ' (pending)', 'post-by-email' );
 			}
 
@@ -490,6 +328,191 @@ class Post_By_Email {
 		// mark all processed emails as read
 		$this->mark_as_read( $uids, $options['delete_messages'] );
 		$this->close_mailbox();
+	}
+
+	/**
+	 * Create a post from the email.
+	 *
+	 * @since    1.1
+	 *
+	 * @param    integer    $uid    The email UID
+	 * @param    integer    $time_difference Blog time difference from UTC (seconds)
+	 * @param    string     $log_message The log message (passed by reference)
+	 *
+	 * @return   integer    $id
+	 */
+	public function create_post( $uid, $time_difference, &$log_message = '' ) {
+		$phone_delim = '::';
+		$options = get_option( 'post_by_email_options' );
+
+		// get headers
+		$headers = $this->get_message_headers( $uid );
+
+		/* Subject */
+		// Captures any text in the subject before $phone_delim as the subject
+		$subject = $headers['Subject'];
+		$subject = explode( $phone_delim, $subject );
+		$subject = $subject[0];
+		$subject = trim( $subject );
+
+
+		/* Author */
+		$from_email = $this->get_message_author( $headers );
+
+		$userdata = get_user_by( 'email', $from_email );
+		if ( ! empty( $userdata ) ) {
+			$post_author = $userdata->ID;
+
+			// Save as a draft if requested
+			if ( $options['registered_pending'] ) {
+				$post_status =  'draft';
+			} else {
+				// Set $post_status based on author's publish_posts capability
+				$user = new WP_User( $post_author );
+				$post_status = ( $user->has_cap( 'publish_posts' ) ) ? 'publish' : 'pending';
+			}
+		} else {
+			if ( $options['discard_pending'] ) {
+				$post_log_message = sprintf( __( "No author match for %s (Subject: %s); skipping.", 'post-by-email' ),
+														$from_email, $subject );
+				$log_message .= '<br />' . $post_log_message;
+				// send response email for failure
+				if ( $options['send_response'] ) {
+					$this->send_response( FALSE, $subject, $post_log_message, $from_email );
+				}
+				return false;
+			}
+			// use admin if no author found
+			$post_author = $this->get_admin_id();
+			$post_status = 'pending';
+		}
+
+
+		/* Date */
+		$ddate_U = $this->get_message_date( $headers );
+		$post_date = gmdate( 'Y-m-d H:i:s', $ddate_U + $time_difference );
+		$post_date_gmt = gmdate( 'Y-m-d H:i:s', $ddate_U );
+
+
+		/* Message body */
+		$content = $this->get_message_body( $uid );
+
+		//Give Post-By-Email extending plugins full access to the content
+		//Either the raw content or the content of the last quoted-printable section
+		$content = apply_filters( 'wp_mail_original_content', $content );
+
+		// Captures any text in the body after $phone_delim as the body
+		$content = explode( $phone_delim, $content );
+		$content = empty( $content[1] ) ? $content[0] : $content[1];
+
+		$content = trim( $content );
+
+		// replace HTML-ized quotes with the real thing, so shortcode arguments work
+		$content = str_replace( array( '&#39;', '&quot;' ), array( "'", '"' ), $content );
+
+		$post_content = apply_filters( 'phone_content' , $content );
+
+		/* post title */
+		$post_title = xmlrpc_getposttitle( $content );
+
+		if ( '' == $post_title )
+			$post_title = $subject;
+
+		/* validate PIN */
+		if ( $options['pin_required'] ) {
+			$pin = $this->find_shortcode( 'pin', $post_content );
+			$pin = implode( $pin );
+
+			if ( $pin != $options['pin'] ) {
+				// security check failed - move on to the next message
+				$post_log_message = '"' . $post_title . '" ' . __( 'failed PIN authentication; discarding.', 'post-by-email' );
+				$log_message .= '<br />' . $post_log_message;
+				// send response email for failure
+				if ( $options['send_response'] ) {
+					$this->send_response( FALSE, $subject, $post_log_message, $from_email );
+				}
+				return false;
+			}
+		}
+
+
+		/* shortcode: categories. [category cat1 cat2...] */
+
+		$shortcode_categories = $this->find_shortcode( 'category', $post_content );
+		$post_category = array();
+		if ( empty( $shortcode_categories ) ) {
+			$post_category[] = $options['default_email_category'];
+		}
+		foreach ( $shortcode_categories as $cat ) {
+			if ( is_numeric( $cat ) ) {
+				$post_category[] = $cat;
+			} elseif ( get_category_by_slug( $cat ) ) {
+				$term = get_category_by_slug( $cat );
+				$post_category[] = $term->term_id;
+			} else {  // create new category
+				$new_category = wp_insert_term( $cat, 'category' );
+				if ( $new_category ) {
+					$post_category[] = $new_category['term_id'];
+				}
+			}
+		}
+
+		/* shortcode: tags. [tag tag1 tag2...] */
+
+		$tags_input = $this->find_shortcode( 'tag', $post_content );
+
+		$original_post_content = $post_content;
+		$post_content = $this->filter_valid_shortcodes( $post_content );
+
+
+		/* create the post */
+		$post_data = compact( 'post_content', 'post_title', 'post_date', 'post_date_gmt', 'post_author', 'post_category', 'post_status', 'tags_input' );
+		$post_data = wp_slash( $post_data );
+
+		$post_ID = wp_insert_post( $post_data );
+		if ( is_wp_error( $post_ID ) ) {
+			$log_message .= "\n" . $post_ID->get_error_message();
+			$this->save_error_message( $log_message );
+			// send response email for failure
+			if ( $options['send_response'] ) {
+				$this->send_response( FALSE, $subject, $post_ID->get_error_message(), $from_email );
+			}
+		}
+
+		// We couldn't post, for whatever reason. Return and move on.
+		if ( empty( $post_ID ) )
+			return $post_ID;
+
+		// save original message sender as post_meta, in case we want it later
+		add_post_meta( $post_ID, 'original_author', $from_email );
+
+		/* shortcode: post-format. [post-format format] */
+		$post_format_input = $this->find_shortcode( 'post-format', $original_post_content );
+		if ( ! empty( $post_format_input ) )
+			set_post_format( $post_ID, $post_format_input[0] );
+
+		/* shortcode: custom taxonomies.  [taxname term1 term2 ...] */
+		$tax_input = array();
+
+		// get all registered custom taxonomies
+		$args = array(
+			'public'   => true,
+			'_builtin' => false,
+		);
+		$registered_taxonomies = get_taxonomies( $args, 'names', 'and' ); 
+
+		if ( $registered_taxonomies ) {
+			foreach ( $registered_taxonomies as $taxonomy_name ) {
+				$tax_shortcodes = $this->find_shortcode( $taxonomy_name, $original_post_content );
+				if ( count( $tax_shortcodes ) > 0 ) {
+					// pending bug fix: http://core.trac.wordpress.org/ticket/19373
+					//$tax_input[] = array( $taxonomy_name => $tax_shortcodes );
+					wp_set_post_terms( $post_ID, $tax_shortcodes, $taxonomy_name );
+				}
+			}
+		}
+
+		return $post_ID;		
 	}
 
 	/**

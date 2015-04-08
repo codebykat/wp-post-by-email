@@ -213,8 +213,7 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 			'open_mailbox',
 			'get_messages',
 			'close_mailbox',
-			'get_message_headers',
-			'get_message_body',
+			'create_post',
 			'save_attachments',
 			'mark_as_read',
 		);
@@ -224,12 +223,57 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		     ->method( 'open_mailbox' )
 		     ->will( $this->returnValue( true ) );
 
-		$message_text = file_get_contents( 'messages/message_with_attachments', true );
-		$headers = Horde_Mime_Headers::parseHeaders( $message_text );
-
 		$stub->expects( $this->once() )
 		     ->method( 'get_messages' )
 		     ->will( $this->returnValue( array( 1 ) ) );
+
+		$new_post_ID = wp_insert_post( array( 'post_title' => 'Test post', 'post_content' => 'This is a test' ) );
+
+		$stub->expects( $this->once() )
+		     ->method( 'create_post' )
+		     ->will( $this->returnValue( $new_post_ID ) );
+
+		$stub->expects( $this->once() )
+		     ->method( 'save_attachments' );
+
+		$stub->expects( $this->once() )
+		     ->method( 'mark_as_read' );
+
+		$stub->expects( $this->once() )
+		     ->method( 'close_mailbox' );
+
+		$stub->check_email();
+
+		$this->stringContains( "Found 1 new message.", $this->get_last_log_message() );
+		$this->assertRegExp( '/Posted(.*?)' . 'Test post' . '/', $this->get_last_log_message() );
+
+		// make sure we set the last checked time
+		$timestamp = current_time( 'timestamp', true );
+		$last_checked = $this->get_option( 'last_checked' );
+		$this->assertEquals( $timestamp, $last_checked );
+	}
+
+	/**
+	* Helper function to set up the stub for create_post.
+	*
+	* @since    1.1
+	*/
+	protected function create_post_stub() {
+		$methods_to_stub = array(
+			'get_message_headers',
+			'get_message_author',
+			'send_response',
+			'get_admin_id',
+			'get_message_date',
+			'get_message_body',
+			'find_shortcode',
+			'filter_valid_shortcodes',
+			'save_error_message',
+		);
+		$stub = $this->getMock( 'Post_By_Email', $methods_to_stub, array(), '', false );
+
+		$message_text = file_get_contents( 'messages/message_with_attachments', true );
+		$headers = Horde_Mime_Headers::parseHeaders( $message_text );
 
 		$headers_array = array(
 			'Date'    => $headers->getValue( 'Date' ),
@@ -244,28 +288,97 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 		$message = Horde_Mime_Part::parseMessage( $message_text );
 		$body = $message->getPart( '1.1' )->toString();
 
-		$stub->expects( $this->once() )
-		     ->method( 'get_message_body' )
+		$stub->method( 'get_message_body' )
 		     ->will( $this->returnValue( $body ) );
 
+		$stub->method( 'find_shortcode' )
+		     ->will( $this->returnValue( array() ) );
+
+		return $stub;
+	}
+
+	/**
+	* Test creating a post from an email.
+	*
+	* @since    1.1
+	* @covers   ::create_post
+	*/
+	public function test_create_post_from_email() {
+		$stub = $this->create_post_stub();
+		$post_ID = $stub->create_post( 1, 0 );
+		$post = get_post( $post_ID );
+		$this->assertInstanceOf( 'WP_Post', $post );
+	}
+
+	/**
+	* Test that posts from unknown address are discarded if that option is set.
+	*
+	* @since    1.1
+	* @covers   ::create_post
+	*/
+	public function test_post_from_unknown_user_should_be_discarded() {
+		$this->set_option( 'discard_pending', true );
+		$stub = $this->create_post_stub();
+
+		$post_ID = $stub->create_post( 1, 0 );
+		$this->assertFalse( $post_ID );
+	}
+
+	/**
+	* Test that posts from unknown address are set to pending if that option is set.
+	*
+	* @since    1.1
+	* @covers   ::create_post
+	*/
+	public function test_post_from_unknown_user_should_pending() {
+		$this->set_option( 'discard_pending', false );
+		$stub = $this->create_post_stub();
+		$post_ID = $stub->create_post( 1, 0 );
+		$post = get_post( $post_ID );
+		$this->assertInstanceOf( 'WP_Post', $post );
+		$this->assertEquals( 'pending', $post->post_status );
+	}
+
+	/**
+	* Test that posts from registered addresses are set to draft if that option is set.
+	*
+	* @since    1.1
+	* @covers   ::create_post
+	*/
+	public function test_post_from_registered_user_should_draft() {
+		$this->set_option( 'registered_pending', true );
+		$stub = $this->create_post_stub();
+
+		$admin_email = get_option( 'admin_email' );
 		$stub->expects( $this->once() )
-		     ->method( 'save_attachments' );
+		     ->method( 'get_message_author' )
+		     ->will( $this->returnValue( $admin_email ) );
 
+		$post_ID = $stub->create_post( 1, 0 );
+		$post = get_post( $post_ID );
+		$this->assertInstanceOf( 'WP_Post', $post );
+		$this->assertEquals( 'draft', $post->post_status );
+	}
+
+	/**
+	* Test that posts from registered addresses are published if that option is set.
+	*
+	* @since    1.1
+	* @covers   ::create_post
+	*/
+	public function test_post_from_registered_user_should_publish() {
+		$this->set_option( 'registered_pending', false );
+		$stub = $this->create_post_stub();
+
+		$admin_email = get_option( 'admin_email' );
 		$stub->expects( $this->once() )
-		     ->method( 'mark_as_read' );
+		     ->method( 'get_message_author' )
+		     ->will( $this->returnValue( $admin_email ) );
 
-		$stub->expects( $this->once() )
-		     ->method( 'close_mailbox' );
-
-		$stub->check_email();
-
-		$this->stringContains( "Found 1 new message.", $this->get_last_log_message() );
-		$this->assertRegExp( '/Posted(.*?)' . $headers->getValue('Subject') . '/', $this->get_last_log_message() );
-
-		// make sure we set the last checked time
-		$timestamp = current_time( 'timestamp', true );
-		$last_checked = $this->get_option( 'last_checked' );
-		$this->assertEquals( $timestamp, $last_checked );
+		$post_ID = $stub->create_post( 1, 0 );
+		$post = get_post( $post_ID );
+		$this->assertInstanceOf( 'WP_Post', $post );
+		$this->assertEquals( 'publish', $post->post_status );
 	}
 
 	/**

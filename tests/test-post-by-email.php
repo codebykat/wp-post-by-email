@@ -514,8 +514,35 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	* @covers   ::save_attachments
 	*/
 	public function test_save_attachments() {
-		// This will test $stub->save_attachments();
-		$this->markTestIncomplete();
+		$stub = $this->getMock( 'Post_By_Email', array( 'get_attachments', 'get_single_attachment' ), array(), '', false );
+
+		$attachments = array(
+			array(
+				'disposition' => 'attachment',
+				'type'        => 'image',
+				'mimetype'    => 'image/png',
+				'mime_id'     => 1,
+				'name'        => 'logo.png',
+			)
+		);
+
+		$image_data = file_get_contents( 'tests/messages/logo.png' );
+
+		$post_ID = wp_insert_post( array( 'post_title' => 'Created by test_save_attachments' ) );
+
+		$stub->expects( $this->once() )
+		     ->method( 'get_attachments' )
+		     ->will( $this->returnValue( $attachments ) );
+
+		$stub->expects( $this->once() )
+		     ->method( 'get_single_attachment' )
+		     ->will( $this->returnValue( $image_data ) );
+
+		$attachments_saved = $stub->save_attachments( 1, $post_ID );
+		$this->assertEquals( 1, $attachments_saved );
+
+		$attached_media = get_attached_media( 'image', $post_ID );
+		$this->assertCount( 1, $attached_media );
 	}
 
 	/**

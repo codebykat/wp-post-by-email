@@ -17,6 +17,7 @@
  * @group   PostByEmailCore
  * @coversDefaultClass Post_By_Email
  */
+
 class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 
 	/**
@@ -543,17 +544,6 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 
 		$attached_media = get_attached_media( 'image', $post_ID );
 		$this->assertCount( 1, $attached_media );
-	}
-
-	/**
-	* Test sending an email response.
-	*
-	* @since    1.1
-	* @covers   ::send_response
-	*/
-	public function test_send_response() {
-		// This will test $stub->send_response();
-		$this->markTestIncomplete();
 	}
 
 	/**

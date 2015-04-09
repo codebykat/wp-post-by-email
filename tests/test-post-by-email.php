@@ -563,8 +563,22 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	* @covers   ::find_shortcode
 	*/
 	public function test_find_shortcode() {
-		// This will test $stub->find_shortcode();
-		$this->markTestIncomplete();
+		$fulltext = <<<EOT
+Hi!
+
+I am a message that contains a shortcode.
+
+[category posted-by-email another-category]
+
+Some other text is after the shortcode, too.
+
+EOT;
+		$shortcode_categories = $this->plugin->find_shortcode( 'category', $fulltext );
+
+		$this->assertInternalType( 'array', $shortcode_categories );
+		$this->assertCount( 2, $shortcode_categories );
+		$this->assertContains( 'posted-by-email', $shortcode_categories );
+		$this->assertContains( 'another-category', $shortcode_categories );
 	}
 
 	/**
@@ -574,8 +588,28 @@ class Tests_Post_By_Email_Plugin extends WP_UnitTestCase {
 	* @covers   ::filter_valid_shortcodes
 	*/
 	public function test_filter_valid_shortcodes() {
-		// This will test $stub->filter_valid_shortcodes();
-		$this->markTestIncomplete();
+		$fulltext = <<<EOT
+Hi!
+
+I am a message that contains a shortcode.
+
+[category posted-by-email another-category]
+
+Some other text is after the shortcode, too.
+
+EOT;
+		$filtered_fulltext = <<<EOT
+Hi!
+
+I am a message that contains a shortcode.
+
+
+
+Some other text is after the shortcode, too.
+
+EOT;
+		$filtered = $this->plugin->filter_valid_shortcodes( $fulltext );
+		$this->assertEquals( $filtered_fulltext, $filtered );
 	}
 
 	/**

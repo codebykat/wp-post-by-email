@@ -813,7 +813,7 @@ class Post_By_Email {
 	 *
 	 * @param    bool      $success        Was the post added?
 	 * @param    string    $subject        The message subject
-	 * @param    string    $log_message    The message return by the post.
+	 * @param    string    $log_message    The message returned by the post.
 	 * @param    string    $author_email   Email from which post originated.
 	 */
 	public function send_response( $success, $subject, $log_message, $author_email ) {
@@ -835,7 +835,6 @@ class Post_By_Email {
 	 * @since    1.0.2
 	 *
 	 * @param    string    $shortcode    Shortcode to look for
-	 *
 	 * @param    string    $text         Text to search within
 	 *
 	 * @return   array     $args         Shortcode arguments
